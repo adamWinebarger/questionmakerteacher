@@ -2,6 +2,7 @@ import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
 import 'package:password_field_validator/password_field_validator.dart';
 import 'package:sf_symbols/sf_symbols.dart';
+import 'package:flutter_signin_button/flutter_signin_button.dart';
 
 
 class AuthScreen extends StatefulWidget {
@@ -21,6 +22,7 @@ class _AuthScreenState extends State<AuthScreen> {
   var _isLogin = false, _passwordFieldSelected = false, _isAuthenticating = false;
   var _enteredEmail = '', _enteredPassword = '', _enteredLastName = '',
     _enteredFirstName = '';
+  var _sfSymbolSize = 75.0;
 
   void _submit() {
     setState(() {
@@ -39,20 +41,20 @@ class _AuthScreenState extends State<AuthScreen> {
             children: [
               Container(
                 margin: const EdgeInsets.only(
-                  top: 30,
+                  top: 0,
                   left: 20,
                   right: 20,
-                  bottom: 20
+                  bottom: 0
                 ),
-                width: 200,
+                width: _sfSymbolSize,
                 child: SfSymbol(
                   name: 'questionmark.bubble.fill',
                   color: Theme.of(context).colorScheme.primary,
-                  size: 200,
+                  size: _sfSymbolSize,
                   weight: FontWeight.w200
                 ),
               ),
-              const SizedBox(height: 15,),
+              //const SizedBox(height: 15),
               Card(
                 margin: const EdgeInsets.all(20),
                 child: SingleChildScrollView(
@@ -63,6 +65,28 @@ class _AuthScreenState extends State<AuthScreen> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          //Last name
+                          if (!_isLogin)
+                            TextFormField(
+                              decoration: const InputDecoration(labelText: "First Name:"),
+                              validator: (value) {
+                                if (value == null || value.trim().length < 4) {
+                                  return "Invalid last name detected.";
+                                }
+                                return null;
+                              },
+                            ),
+                          //First Name
+                          if (!_isLogin)
+                            TextFormField(
+                              decoration: const InputDecoration(labelText: "Last Name:"),
+                              validator: (value) {
+                                if (value == null || value.trim().length < 4) {
+                                  return "Invalid last name detected.";
+                                }
+                                return null;
+                              },
+                            ),
                           //This will be for the email input
                           TextFormField(
                             decoration: const InputDecoration(labelText: "Email"),
@@ -86,7 +110,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           ),
                           //This one will be for the password
                           Container(
-                            padding: EdgeInsets.only(bottom: 10),
+                            padding: const EdgeInsets.only(bottom: 10),
                             child: Column(
                               children: [
                                 //if (_isLogin)
@@ -111,9 +135,9 @@ class _AuthScreenState extends State<AuthScreen> {
                                     _passwordFieldSelected = false;
                                   },
                                 ),
-                                if (!_isLogin && _passwordFieldSelected)
+                                if (!_isLogin)
                                   const SizedBox(height: 10,),
-                                if (!_isLogin && _passwordFieldSelected)
+                                if (!_isLogin)
                                   PasswordFieldValidator(
                                     minLength: 8,
                                     uppercaseCharCount: 2,
@@ -134,31 +158,39 @@ class _AuthScreenState extends State<AuthScreen> {
                           //     child: const CircularProgressIndicator()
                           //   )
                           // else
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Theme.of(context).colorScheme.primary,
-                                //textStyle: TextStyle(color: Theme.of(context).primaryColor),
-                              ),
-                              onPressed: _submit,
-                              child: !_isAuthenticating ?
-                                Text(
-                                _isLogin ? "Login" : "Sign Up",
-                                style: TextStyle(
-                                  color: Theme.of(context).colorScheme.primaryContainer,
-                                ),
-                              ) : SizedBox(
-                                height: 12,
-                                width: 12,
-                                child: CircularProgressIndicator(
-                                  backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                                ),
-                              )
+                          //Buttons
+                          SizedBox(height: 15,),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Theme.of(context).colorScheme.primary,
+                              //textStyle: TextStyle(color: Theme.of(context).primaryColor),
                             ),
+                            onPressed: _submit,
+                            child: !_isAuthenticating ?
+                              Text(
+                              _isLogin ? "Login" : "Sign Up",
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.primaryContainer,
+                              ),
+                            ) : SizedBox(
+                              height: 12,
+                              width: 12,
+                              child: CircularProgressIndicator(
+                                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                              ),
+                            )
+                          ),
+                          const SizedBox(height: 5,),
+                          SignInButton(
+                            Buttons.GoogleDark,
+                            onPressed: () {}
+                          ),
                           if (!_isAuthenticating)
                             TextButton(
                               onPressed: () {
                                 setState(() {
                                   _isLogin = !_isLogin;
+                                  _sfSymbolSize = _isLogin ? 200 : 75;
                                 });
                               },
                               child: Text( _isLogin ? "Create an account" : "I already have an account")

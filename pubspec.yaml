@@ -38,6 +38,7 @@ dependencies:
   sf_symbols: ^0.2.0
   email_validator: ^2.1.17
   password_field_validator: ^0.0.1
+  flutter_signin_button: ^2.0.0
 
 dev_dependencies:
   flutter_test:
