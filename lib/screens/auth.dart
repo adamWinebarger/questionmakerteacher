@@ -1,6 +1,9 @@
 import 'package:email_validator/email_validator.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:password_field_validator/password_field_validator.dart';
+import 'package:questionmakerteacher/main.dart';
+import 'package:questionmakerteacher/screens/patient_list_screen.dart';
 import 'package:sf_symbols/sf_symbols.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
 
@@ -28,33 +31,54 @@ class _AuthScreenState extends State<AuthScreen> {
     setState(() {
       _isAuthenticating = true;
     });
+
+    //Used to test the transition from the login screen to the patientList.
+    //Will need to be changed later.
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) =>  const PatientListScreen())
+    );
+    
+    setState(() {
+      _isAuthenticating = false;
+    });
   }
 
   @override
   Widget build(context) {
     return Scaffold(
       //backgroundColor: Theme.of(context).primaryColor,
+      appBar: AppBar(
+        title: Center(
+          child: Text(_isLogin ? "Login" : "Signup"),
+        ),
+      ),
       body: Center(
         child: SingleChildScrollView(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                margin: const EdgeInsets.only(
-                  top: 0,
-                  left: 20,
-                  right: 20,
-                  bottom: 0
-                ),
-                width: _sfSymbolSize,
-                child: SfSymbol(
-                  name: 'questionmark.bubble.fill',
-                  color: Theme.of(context).colorScheme.primary,
-                  size: _sfSymbolSize,
-                  weight: FontWeight.w200
-                ),
+              // Container(
+              //   margin: const EdgeInsets.only(
+              //     top: 0,
+              //     left: 20,
+              //     right: 20,
+              //     bottom: 0
+              //   ),
+              //   width: _sfSymbolSize,
+              //   child: SfSymbol(
+              //     name: 'questionmark.bubble.fill',
+              //     color: Theme.of(context).colorScheme.primary,
+              //     size: _sfSymbolSize,
+              //     weight: FontWeight.w200
+              //   ),
+              // ),
+              Icon(
+                CupertinoIcons.search_circle_fill,
+                size: _isLogin ? 200 : 75,
+                color: Theme.of(context).colorScheme.primary,
               ),
-              //const SizedBox(height: 15),
+              SizedBox(height: _isLogin ? 75 : 15),
               Card(
                 margin: const EdgeInsets.all(20),
                 child: SingleChildScrollView(
@@ -159,7 +183,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           //   )
                           // else
                           //Buttons
-                          SizedBox(height: 15,),
+                          const SizedBox(height: 15,),
                           ElevatedButton(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Theme.of(context).colorScheme.primary,
@@ -181,9 +205,35 @@ class _AuthScreenState extends State<AuthScreen> {
                             )
                           ),
                           const SizedBox(height: 5,),
-                          SignInButton(
-                            Buttons.GoogleDark,
-                            onPressed: () {}
+                          // SignInButton(
+                          //   Buttons.GoogleDark,
+                          //  
+                          //   onPressed: () {}
+                          // ),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Theme.of(context).colorScheme.primary,
+                              //textStyle: TextStyle(color: Theme.of(context).primaryColor),
+                            ),
+                            onPressed: () {}, 
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  width: 25,
+                                  height: 25,
+                                  child: const Image(image: AssetImage('assets/images/google_circle.png'), height: 24, width: 24,),
+                                ),
+                                SizedBox(width: 10,),
+                                Text(
+                                  "Sign in With Google",
+                                  style: TextStyle(
+                                    color: Theme.of(context).colorScheme.primaryContainer,
+                                  )
+                                )
+                              ],
+                            )
                           ),
                           if (!_isAuthenticating)
                             TextButton(
