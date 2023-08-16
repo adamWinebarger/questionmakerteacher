@@ -22,17 +22,16 @@ class QuestionnaireScreen extends StatefulWidget {
 
 class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
 
-  //final _formKey = GlobalKey<FormState>();
+  final _formKey = GlobalKey<FormState>();
   final List<Answers> _answers = [];
 
-  int _count = -1;
+  int _count = 0;
   Answers? _selectedAnswer;
   TimeOfInteraction? _selectedTimeOfInteraction;
 
   List<Widget> _setupAnswerRadioButtons() {
     List<Widget> widgetList = [];
 
-    if (_count >= 0) {
       for (final category in _answerSelection.entries) {
         widgetList.add(
             ListTile(
@@ -48,35 +47,17 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
               ),
             )
         );
-        widgetList.add(const SizedBox(height: 20,));
-      }
-    } else {
-      for (final selection in TimeOfInteraction.values) {
-        widgetList.add(
-          ListTile(
-            title: Text(selection.name.capitalize()),
-            leading: Radio<TimeOfInteraction>(
-              value: selection,
-              groupValue: _selectedTimeOfInteraction,
-              onChanged: (TimeOfInteraction? value) {
-                setState(() {
-                  _selectedTimeOfInteraction = value;
-                });
-              },
-            ),
-          )
-        );
-      }
+      widgetList.add(const SizedBox(height: 20,));
     }
     return widgetList;
   }
 
   void _nextPressed() {
-    if (_count >= 0 && _selectedAnswer != null) {
+    if (_selectedAnswer != null) {
       _answers.add(_selectedAnswer!);
     }
 
-    if (_count < widget.patientInQuestion.teacherQuestions.length - 1) {
+    if (_count < widget.patientInQuestion.teacherQuestions.length - 1 && _selectedAnswer != null) {
       setState(() {
         _count++;
         _selectedAnswer = null;
@@ -93,12 +74,6 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
         _selectedAnswer = _answers.isNotEmpty ? _answers.last : null;
         _answers.removeLast();
       });
-    } else if (_count == 0) {
-      setState(() {
-        _count = -1;
-        _answers.removeLast();
-        //build(context);
-      });
     } else {
       Navigator.of(context).pop();
     }
@@ -106,6 +81,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
 
   @override
   Widget build(context) {
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("Answer Screen"),
@@ -113,7 +89,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
       body: Padding(
         padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 24),
         child: Form(
-          //key: _formKey,
+          key: _formKey,
           child: Column(
             children: [
               if (_count > -1)
@@ -138,7 +114,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
               ),
               for (final item in _setupAnswerRadioButtons())
                 item,
-              const SizedBox(height: 25,),
+              //const SizedBox(height: 25,),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -153,8 +129,37 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                       _count == widget.patientInQuestion.teacherQuestions.length - 1 ?
                         "Submit" : "Next"
                     )
-                  )
+                  ),
                 ],
+              ),
+              const SizedBox(height: 20,),
+              DropdownButtonFormField(
+                decoration: const InputDecoration(
+                  label: Text(
+                      "Select the time of day that this questionnaire is for:",
+                    style: TextStyle(
+                      fontSize: 12
+                    ),
+                  )
+                ),
+                items: [
+                  for (final selection in TimeOfInteraction.values)
+                    DropdownMenuItem(
+                        value: selection,
+                        child: Text(selection.name.capitalize())
+                    )
+                ] ,
+                onChanged: (value) {
+                  setState(() {
+                    _selectedTimeOfInteraction = value!;
+                  });
+                },
+                validator: (value) {
+                  if (value == null) {
+                    return "You must select a time of day for this interaction";
+                  }
+                  return null;
+                },
               )
             ],
           ),
@@ -162,5 +167,4 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
       ),
     );
   }
-
 }
