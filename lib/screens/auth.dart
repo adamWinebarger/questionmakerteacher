@@ -188,6 +188,7 @@ class _AuthScreenState extends State<AuthScreen> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Theme.of(context).colorScheme.primary,
                               //textStyle: TextStyle(color: Theme.of(context).primaryColor),
+                              minimumSize: Size(200, 36)
                             ),
                             onPressed: _submit,
                             child: !_isAuthenticating ?
@@ -212,8 +213,13 @@ class _AuthScreenState extends State<AuthScreen> {
                           // ),
                           ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Theme.of(context).colorScheme.primary,
+                              backgroundColor: Theme.of(context).colorScheme.background,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(100),
+                              ),
+                              side: BorderSide(width: 1, color: Theme.of(context).colorScheme.primary),
                               //textStyle: TextStyle(color: Theme.of(context).primaryColor),
+                              minimumSize: const Size(200, 40)
                             ),
                             onPressed: () {}, 
                             child: Row(
@@ -225,11 +231,11 @@ class _AuthScreenState extends State<AuthScreen> {
                                   height: 25,
                                   child: const Image(image: AssetImage('assets/images/google_circle.png'), height: 24, width: 24,),
                                 ),
-                                SizedBox(width: 10,),
+                                const SizedBox(width: 10,),
                                 Text(
                                   "Sign in With Google",
                                   style: TextStyle(
-                                    color: Theme.of(context).colorScheme.primaryContainer,
+                                    color: Theme.of(context).colorScheme.primary,
                                   )
                                 )
                               ],
