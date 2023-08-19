@@ -1,4 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:email_validator/email_validator.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:password_field_validator/password_field_validator.dart';
@@ -7,6 +9,7 @@ import 'package:questionmakerteacher/screens/patient_list_screen.dart';
 import 'package:sf_symbols/sf_symbols.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
 
+final _firebaseAuth = FirebaseAuth.instance;
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -27,21 +30,64 @@ class _AuthScreenState extends State<AuthScreen> {
     _enteredFirstName = '';
   var _sfSymbolSize = 75.0;
 
-  void _submit() {
+  void _submit() async {
     setState(() {
       _isAuthenticating = true;
     });
 
+    final isValid = _formKey.currentState!.validate();
+
+    if (!isValid) {
+      //Should we do an error message here?
+      return;
+    }
+
+    _formKey.currentState!.save();
+
+    try {
+      //might move the authenticating indicator into this try block...
+
+      if (_isLogin) {
+        final userCreds = await _firebaseAuth.signInWithEmailAndPassword(
+            email: _enteredEmail, password: _enteredPassword);
+      } else {
+        final userCreds = await _firebaseAuth.createUserWithEmailAndPassword(
+            email: _enteredEmail, password: _enteredPassword);
+
+        await FirebaseFirestore.instance.collection('users')
+            .doc(userCreds.user!.uid).set({
+          'firstName': _enteredFirstName,
+          'lastName': _enteredLastName,
+          'email': _enteredEmail,
+          'parentOrTeacher': 'teacher'
+        });
+      }
+    } on FirebaseAuthException catch (error) {
+      if (error.code == 'email-already-in-use') {
+
+      }
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(error.message ?? "Authentication Failed")
+          )
+      );
+      setState(() {
+        _isAuthenticating = false;
+      });
+    }
+
+
     //Used to test the transition from the login screen to the patientList.
     //Will need to be changed later.
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) =>  const PatientListScreen())
-    );
-    
-    setState(() {
-      _isAuthenticating = false;
-    });
+    // Navigator.push(
+    //   context,
+    //   MaterialPageRoute(builder: (context) =>  const PatientListScreen())
+    // );
+    //
+    // setState(() {
+    //   _isAuthenticating = false;
+    // });
   }
 
   @override
@@ -99,6 +145,9 @@ class _AuthScreenState extends State<AuthScreen> {
                                 }
                                 return null;
                               },
+                              onSaved: (value) {
+                                _enteredFirstName = value!;
+                              },
                             ),
                           //First Name
                           if (!_isLogin)
@@ -109,6 +158,9 @@ class _AuthScreenState extends State<AuthScreen> {
                                   return "Invalid last name detected.";
                                 }
                                 return null;
+                              },
+                              onSaved: (value) {
+                                _enteredLastName = value!;
                               },
                             ),
                           //This will be for the email input

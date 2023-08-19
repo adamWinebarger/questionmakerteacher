@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class Patient {
@@ -23,4 +24,15 @@ class Patient {
         teacherQuestions: json['teacherQuestions'],
         teacherCanViewParentAnswers: json['teacherCanViewParentAnswers']
       );
+
+  factory Patient.fromDocumentSnapshot({required DocumentSnapshot<Map<String, dynamic>> doc}) {
+    return Patient(
+      lastName: doc['lastName'],
+      firstName: doc['firstName'],
+      patientCode: doc['patientCode'],
+      parentQuestions: doc['parentQuestions'],
+      teacherQuestions: doc['teacherQuestions'],
+      teacherCanViewParentAnswers: doc['teacherCanViewParentAnswers']
+    );
+  }
 }

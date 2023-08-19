@@ -1,8 +1,16 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:questionmakerteacher/screens/auth.dart';
 import 'package:questionmakerteacher/screens/patient_list_screen.dart';
+import 'package:questionmakerteacher/screens/splash.dart';
+import 'firebase_options.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const App());
 }
 
@@ -31,11 +39,24 @@ class App extends StatelessWidget {
           ),
           scaffoldBackgroundColor: const Color.fromARGB(255, 50, 58, 60)
       ),
-      home: const Scaffold(
+      home: Scaffold(
         // appBar: AppBar(
         //   title: const Center(child: Text("Theme tests"),),
         // ),
-        body: AuthScreen(),
+        body: StreamBuilder(
+          stream: FirebaseAuth.instance.authStateChanges(),
+          builder: (context, dataSnapshot) {
+            if (dataSnapshot.connectionState == ConnectionState.waiting) {
+              return const SplashScreen();
+            }
+
+            if (dataSnapshot.hasData) {
+              return const PatientListScreen();
+            } else {
+              return const AuthScreen();
+            }
+          }
+        ),
       )
     );
   }
