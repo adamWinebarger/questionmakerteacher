@@ -40,24 +40,15 @@ class _PatientListScreenState extends State<PatientListScreen> {
     );
   }
 
+  void _go2PatientView2(Query<Map<String, dynamic>> selectedPatient) {
+
+  }
+
   void _setupPushNotifs() async {
     final fcm = FirebaseMessaging.instance;
     await fcm.requestPermission();
     final token = await fcm.getToken();
   }
-
-  // Stream<List<Patient>> _listStream() {
-  //   try {
-  //     return _crList.snapshots().map(
-  //             // (notes) {
-  //             //   final List<Patient> patientList = [];
-  //             //   for (final DocumentSnapshot<Map<String, dynamic> doc in notes.)
-  //             // }
-  //     );
-  //   } catch(e) {
-  //     rethrow;
-  //   }
-  // }
 
   @override
   void initState() {
@@ -67,27 +58,6 @@ class _PatientListScreenState extends State<PatientListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    Widget content = const Center(child: Text("You have no patients to view"),);
-
-    //_getListData();
-
-
-    if (_isLoading) {
-      content = const Center(child: CircularProgressIndicator(),);
-    }
-
-   print(_crList.count());
-
-    if (false) {
-      content = StreamBuilder(
-        stream: _crList.snapshots(),
-        builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-          if (snapshot.hasData) {
-            final snap = snapshot.data!.docs;
-          }
-        }
-      );
-    }
 
     return Scaffold(
       appBar: AppBar(
@@ -97,8 +67,28 @@ class _PatientListScreenState extends State<PatientListScreen> {
           icon: const Icon(Icons.logout),
         ),
       ),
-      body: content
+      body: StreamBuilder(
+        stream: _crList.snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.hasData && snapshot.data != null) {
+            return ListView.builder(
+              itemCount: snapshot.data!.docs.length,
+              itemBuilder: (context, index) {
+                return ListTile(
+                  title: Text(snapshot.data!.docs[index].id),
+                  onTap: () {
+
+                  },
+                );
+              },
+            );
+          } else if (snapshot.hasError) {
+            return const Text("Error");
+          } else {
+            return const CircularProgressIndicator();
+          }
+        },
+      )
     );
   }
-
 }
