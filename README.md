@@ -4,6 +4,10 @@ This will be the teacher version of the questionmaker application that we're cur
 
 ## Things to still do
 
-- add firebase dependencies
-- Setup screens for the other parts of the app
-- ... alot, really
+- finish setting up firebase dependencies: particularly the login/googleID
+- Add firebase functionality to the necessary screens
+- Finish building the questionnaire screen
+- Build the portion of the app that sends data back to the cloud firestore 
+database
+- ... something else but I forget what
+
