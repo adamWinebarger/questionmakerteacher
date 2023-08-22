@@ -39,6 +39,9 @@ class _AuthScreenState extends State<AuthScreen> {
 
     if (!isValid) {
       //Should we do an error message here?
+      setState(() {
+        _isAuthenticating = false;
+      });
       return;
     }
 
@@ -59,7 +62,8 @@ class _AuthScreenState extends State<AuthScreen> {
           'firstName': _enteredFirstName,
           'lastName': _enteredLastName,
           'email': _enteredEmail,
-          'parentOrTeacher': 'teacher'
+          'parentOrTeacher': 'teacher',
+          'viewablePatients' : []
         });
       }
     } on FirebaseAuthException catch (error) {
@@ -140,8 +144,8 @@ class _AuthScreenState extends State<AuthScreen> {
                             TextFormField(
                               decoration: const InputDecoration(labelText: "First Name:"),
                               validator: (value) {
-                                if (value == null || value.trim().length < 4) {
-                                  return "Invalid last name detected.";
+                                if (value == null || value.trim().length < 2) {
+                                  return "Invalid first name detected.";
                                 }
                                 return null;
                               },

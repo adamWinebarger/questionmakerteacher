@@ -51,7 +51,7 @@ class App extends StatelessWidget {
             }
 
             if (dataSnapshot.hasData) {
-              return const PatientListScreen();
+              return PatientListScreen();
             } else {
               return const AuthScreen();
             }

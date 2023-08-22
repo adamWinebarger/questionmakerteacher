@@ -17,7 +17,6 @@ class PatientView extends StatefulWidget {
 
 class _PatientViewState extends State<PatientView> {
 
-
   @override
   Widget build(context) {
     return Scaffold(
