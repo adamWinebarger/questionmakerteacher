@@ -10,8 +10,8 @@ import '../models/patient.dart';
 final _authenticatedUser = FirebaseAuth.instance.currentUser!;
 
 class PatientListScreen extends StatefulWidget {
-  PatientListScreen({super.key});
-
+  const PatientListScreen({super.key});
+  
   @override
   State<StatefulWidget> createState() {
     return _PatientListScreenState();
@@ -21,13 +21,14 @@ class PatientListScreen extends StatefulWidget {
 
 class _PatientListScreenState extends State<PatientListScreen> {
 
-  bool _isLoading = false;
+  bool _isFetchingData = true;
   List<String> _patientList = [];
   final CollectionReference _crList = FirebaseFirestore.instance.collection("Patients");
   final DocumentReference _currentUserDoc = FirebaseFirestore.instance.collection("users").
       doc(_authenticatedUser.uid);
   //QueryDocumentSnapshot<Object?>? _foundChild;
 
+  final _noPatientsWidget = const Center(child: Text("You have no patients to view"));
 
   void _logoutButtonPressed() {
     FirebaseAuth.instance.signOut();
@@ -36,9 +37,8 @@ class _PatientListScreenState extends State<PatientListScreen> {
   Future<List<String>> _getApprovedPatients() async {
     final currentUserData = await _currentUserDoc.get();
     var map2List = (currentUserData['viewablePatients'] as List)?.map((item) => item as String)?.toList();
-    _patientList = (map2List == null || map2List.isEmpty) ? [] : map2List;
-    print(_patientList);
-    return _patientList;
+    List<String> patientList = (map2List != null && map2List.isNotEmpty) ? map2List : [];
+    return patientList;
   }
 
   void _go2PatientView(Patient patient) {
@@ -72,14 +72,18 @@ class _PatientListScreenState extends State<PatientListScreen> {
   void initState() {
     super.initState();
     _setupPushNotifs();
+    _getApprovedPatients().then((value) {
+      setState(() {
+        _patientList = value;
+        _isFetchingData = false;
+      });
+    });
   }
 
   @override
   Widget build(BuildContext context) {
 
-    var x = _getApprovedPatients();
-    print(_patientList.toString() + " 2");
-
+    print("build $_patientList");
     return Scaffold(
       appBar: AppBar(
         title: const Text("Patient View"),
@@ -100,16 +104,19 @@ class _PatientListScreenState extends State<PatientListScreen> {
           )
         ],
       ),
-      body: (_patientList.isNotEmpty) ? Column(
+      body: (_patientList.isNotEmpty && !_isFetchingData) ? Column(
         children: [
           const SizedBox(height: 5,),
           Expanded(child:
             StreamBuilder(
-              stream: _crList.where('patientCode', whereIn: _patientList).orderBy("lastName").snapshots(),
+              stream: _crList.where("patientCode", whereIn: _patientList).snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.hasData && snapshot.data != null) {
                   if (snapshot.data!.docs.length == 1) {
                     _go2PatientView2(snapshot.data!.docs[0]);
+                  }
+                  if (snapshot.data!.docs.isEmpty) {
+                    return _noPatientsWidget;
                   }
                   return ListView.builder(
                     itemCount: snapshot.data!.docs.length,
@@ -127,15 +134,25 @@ class _PatientListScreenState extends State<PatientListScreen> {
                     },
                   );
                 } else if (snapshot.hasError) {
-                  return const Text("Error");
+                  return Column(
+                    children: [
+                      Center(child: Text(snapshot.error!.toString()),),
+                      ElevatedButton(
+                        onPressed: () {setState(() {
+
+                        });},
+                        child: Text("press")
+                      )
+                    ],
+                  );
                 } else {
-                  return const CircularProgressIndicator();
+                  return _noPatientsWidget;
                 }
               },
             )
           )
         ],
-      ) : const Center(child: Text("You have no patients to view"))
+      ) : _noPatientsWidget
     );
   }
 }
