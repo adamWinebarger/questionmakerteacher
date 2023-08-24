@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:questionmakerteacher/data/patient_list_data.dart';
+import 'package:questionmakerteacher/screens/add_patient_screen.dart';
 import 'package:questionmakerteacher/screens/patient_view.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
@@ -62,6 +63,13 @@ class _PatientListScreenState extends State<PatientListScreen> {
     );
   }
 
+  void _go2AddPatientScreen() {
+    Navigator.push(
+        context, 
+        MaterialPageRoute(builder: (context) => AddPatientScreen(authenticatedUser: _authenticatedUser))
+    );
+  }
+
   void _setupPushNotifs() async {
     final fcm = FirebaseMessaging.instance;
     await fcm.requestPermission();
@@ -86,7 +94,7 @@ class _PatientListScreenState extends State<PatientListScreen> {
     print("build $_patientList");
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Patient View"),
+        title: const Text("Patient Select"),
         leading: IconButton( //this can be our logout button, I guess
           onPressed: _logoutButtonPressed,
           icon: const Icon(Icons.logout),
@@ -94,8 +102,9 @@ class _PatientListScreenState extends State<PatientListScreen> {
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 15),
+            //Add button
             child: GestureDetector(
-              onTap: () {},
+              onTap: _go2AddPatientScreen,
               child: const Icon(
                 Icons.add,
                 size: 25.0,
