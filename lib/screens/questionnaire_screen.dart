@@ -1,8 +1,13 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:questionmakerteacher/models/answerer.dart';
 
 import 'package:questionmakerteacher/models/patient.dart';
 import 'package:questionmakerteacher/models/questionnaire.dart';
 import 'package:questionmakerteacher/stringextension.dart';
+
+final _authenticatedUser = FirebaseAuth.instance.currentUser!;
 
 Map<String, Answers> _answerSelection = {
   "Not at All" : Answers.notAtAll,
@@ -24,6 +29,11 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
 
   final _formKey = GlobalKey<FormState>();
   final List<Answers> _answers = [];
+  final DocumentReference _currentUserDoc = FirebaseFirestore.instance.collection("users").
+    doc(_authenticatedUser.uid);
+  final Map<String, dynamic> _answerMap = {};
+
+  late Answerer _currentAnswerer;
 
   int _count = 0;
   Answers? _selectedAnswer;
@@ -53,17 +63,17 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
   }
 
   void _nextPressed() {
+    //print(_selectedAnswer);
     if (_selectedAnswer != null) {
       _answers.add(_selectedAnswer!);
-    }
-
-    if (_count < widget.patientInQuestion.teacherQuestions.length - 1 && _selectedAnswer != null) {
-      setState(() {
-        _count++;
-        _selectedAnswer = null;
-      });
-    } else {
-      //This is where we will submit our answers
+      if (_count < widget.patientInQuestion.teacherQuestions.length - 1) {
+        setState(() {
+          ++_count;
+          _selectedAnswer = null;
+        });
+      } else {
+        _submitQuestionnaire();
+      }
     }
   }
 
@@ -79,8 +89,49 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
     }
   }
 
+  void _submitQuestionnaire() async {
+
+    for (int i = 0; i < widget.patientInQuestion.teacherQuestions.length; i++) {
+      _answerMap[widget.patientInQuestion.teacherQuestions[i]] = _answers[i].name;
+    }
+
+    print(_currentAnswerer.parentOrTeacher);
+    final answerDocumentPath = "${_authenticatedUser.uid} ${DateTime.now()}";
+    if (_formKey.currentState!.validate()) {
+      await FirebaseFirestore.instance.collection('Patients')
+        .doc(widget.patientInQuestion.path).collection('Answers').doc(answerDocumentPath)
+        .set({
+          'Date/Time' : DateTime.now(),
+          'answererLastName' : _currentAnswerer.lastName,
+          'answererFirstName' : _currentAnswerer.firstName,
+          'parentOrTeacher' : _currentAnswerer.parentOrTeacher.name,
+          'Answers' : _answerMap,
+          'timeOfDay' : _selectedTimeOfInteraction!.name
+      });
+
+      setState(() {
+        Navigator.pop(context);
+      });
+    }
+  }
+
+  void _setCurrentAnswerer() async {
+    final DocumentSnapshot answererDocument = await _currentUserDoc.get();
+    _currentAnswerer = Answerer.fromJSON(answererDocument.data() as Map<String, dynamic>);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    setState(() {
+      _setCurrentAnswerer();
+    });
+  }
+
   @override
   Widget build(context) {
+
+    //print(_currentAnswerer);
 
     return Scaffold(
       appBar: AppBar(

@@ -24,6 +24,7 @@ class _PatientListScreenState extends State<PatientListScreen> {
 
   bool _isFetchingData = true;
   List<String> _patientList = [];
+  final _formKey = GlobalKey<FormState>();
   final CollectionReference _crList = FirebaseFirestore.instance.collection("Patients");
   final DocumentReference _currentUserDoc = FirebaseFirestore.instance.collection("users").
       doc(_authenticatedUser.uid);
@@ -42,17 +43,6 @@ class _PatientListScreenState extends State<PatientListScreen> {
     return patientList;
   }
 
-  void _go2PatientView(Patient patient) {
-
-    //This is where we will go to the patient menu.
-    //Going to the menu, we will need our Patient class, and possibly the user info
-    print(patient.lastName);
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => PatientView(currentPatient: patient))
-    );
-  }
-
   void _go2PatientView2(QueryDocumentSnapshot selectedPatient) {
     Patient patient = Patient.fromJson(selectedPatient.data() as Map<String, dynamic>);
     patient.path = selectedPatient.id;
@@ -66,7 +56,7 @@ class _PatientListScreenState extends State<PatientListScreen> {
   void _go2AddPatientScreen() {
     Navigator.push(
         context, 
-        MaterialPageRoute(builder: (context) => AddPatientScreen(authenticatedUser: _authenticatedUser))
+        MaterialPageRoute(builder: (context) => AddPatientScreen(currentUser: _currentUserDoc))
     );
   }
 
@@ -91,7 +81,7 @@ class _PatientListScreenState extends State<PatientListScreen> {
   @override
   Widget build(BuildContext context) {
 
-    print("build $_patientList");
+    //print("build $_patientList");
     return Scaffold(
       appBar: AppBar(
         title: const Text("Patient Select"),
@@ -118,38 +108,42 @@ class _PatientListScreenState extends State<PatientListScreen> {
           const SizedBox(height: 5,),
           Expanded(child:
             StreamBuilder(
-              stream: _crList.where("patientCode", whereIn: _patientList).snapshots(),
+              stream: _crList.where(FieldPath.documentId, whereIn: _patientList).snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.hasData && snapshot.data != null) {
-                  if (snapshot.data!.docs.length == 1) {
-                    _go2PatientView2(snapshot.data!.docs[0]);
-                  }
+                  // if (snapshot.data!.docs.length == 1) {
+                  //   _go2PatientView2(snapshot.data!.docs[0]);
+                  // }
                   if (snapshot.data!.docs.isEmpty) {
                     return _noPatientsWidget;
+                  } else {
+                    return ListView.builder(
+                      itemCount: snapshot.data!.docs.length,
+                      itemBuilder: (context, index) {
+                        return ListTile(
+                          title: Text(
+                            snapshot.data!.docs[index].id,
+                            style: const TextStyle(
+                                overflow: TextOverflow.ellipsis),
+                          ),
+                          onTap: () {
+                            //print(snapshot.data!.docs[index].data());
+                            _go2PatientView2(snapshot.data!.docs[index]);
+                          },
+                        );
+                      },
+                    );
                   }
-                  return ListView.builder(
-                    itemCount: snapshot.data!.docs.length,
-                    itemBuilder: (context, index) {
-                      return ListTile(
-                        title: Text(
-                          snapshot.data!.docs[index].id,
-                          style: const TextStyle(overflow: TextOverflow.ellipsis),
-                        ),
-                        onTap: () {
-                          print(snapshot.data!.docs[index].data());
-                          _go2PatientView2(snapshot.data!.docs[index]);
-                        },
-                      );
-                    },
-                  );
                 } else if (snapshot.hasError) {
                   return Column(
                     children: [
                       Center(child: Text(snapshot.error!.toString()),),
                       ElevatedButton(
-                        onPressed: () {setState(() {
+                        onPressed: () {
+                          setState(() {
 
-                        });},
+                          });
+                        },
                         child: Text("press")
                       )
                     ],
