@@ -11,3 +11,6 @@ This will be the teacher version of the questionmaker application that we're cur
 database
 - ... something else but I forget what
 
+## Known Issues/Problems
+
+- Patient List is now not updating after returning from AddPatientScreen. Will need to address that in testing.
