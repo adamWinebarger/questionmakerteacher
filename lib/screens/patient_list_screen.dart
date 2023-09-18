@@ -53,11 +53,20 @@ class _PatientListScreenState extends State<PatientListScreen> {
     );
   }
 
-  void _go2AddPatientScreen() {
-    Navigator.push(
+  void _go2AddPatientScreen() async {
+    await Navigator.push(
         context, 
         MaterialPageRoute(builder: (context) => AddPatientScreen(currentUser: _currentUserDoc))
     );
+
+    setState(() {
+      _getApprovedPatients().then((value) {
+        setState(() {
+          _patientList = value;
+          _isFetchingData = false;
+        });
+      });
+    });
   }
 
   void _setupPushNotifs() async {
@@ -144,7 +153,7 @@ class _PatientListScreenState extends State<PatientListScreen> {
 
                           });
                         },
-                        child: Text("press")
+                        child: const Text("press")
                       )
                     ],
                   );
