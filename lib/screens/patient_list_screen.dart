@@ -38,7 +38,7 @@ class _PatientListScreenState extends State<PatientListScreen> {
 
   Future<List<String>> _getApprovedPatients() async {
     final currentUserData = await _currentUserDoc.get();
-    var map2List = (currentUserData['viewablePatients'] as List)?.map((item) => item as String)?.toList();
+    var map2List = (currentUserData['viewableStudents'] as List)?.map((item) => item as String)?.toList();
     List<String> patientList = (map2List != null && map2List.isNotEmpty) ? map2List : [];
     return patientList;
   }

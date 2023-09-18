@@ -95,7 +95,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
       _answerMap[widget.patientInQuestion.teacherQuestions[i]] = _answers[i].name;
     }
 
-    print(_currentAnswerer.parentOrTeacher);
+    //print(_currentAnswerer.parentOrTeacher);
     final answerDocumentPath = "${_authenticatedUser.uid} ${DateTime.now()}";
     if (_formKey.currentState!.validate()) {
       await FirebaseFirestore.instance.collection('Patients')

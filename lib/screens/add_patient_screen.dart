@@ -41,7 +41,7 @@ class _AddPatientState extends State<AddPatientScreen> {
     //so we'll add a new patient to the array when the error message is null
     if (errorMessage == null) {
       await widget.currentUser.update({
-        'viewablePatients' : FieldValue.arrayUnion([foundPatient!.id])
+        'viewableStudents' : FieldValue.arrayUnion([foundPatient!.id])
       });
     }
     return errorMessage;
@@ -53,7 +53,7 @@ class _AddPatientState extends State<AddPatientScreen> {
   // for that... something to think about
   Future<List<String>> _getPatientList() async {
     final currentUserData = await widget.currentUser.get();
-    var map2List = (currentUserData['viewablePatients'] as List)?.map((e) => e as String)?.toList();
+    var map2List = (currentUserData['viewableStudents'] as List)?.map((e) => e as String)?.toList();
     List<String> patientList = (map2List != null && map2List.isNotEmpty) ? map2List : [];
     return patientList;
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:questionmakerteacher/models/patient.dart';
+import 'package:questionmakerteacher/screens/patient_dataview_screen.dart';
 import 'package:questionmakerteacher/screens/questionnaire_screen.dart';
 import 'package:questionmakerteacher/widgets/test_widgets.dart';
 
@@ -36,15 +37,15 @@ class _PatientViewState extends State<PatientView> {
               )
             ),
             const SizedBox(height: 100,),
-            ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(
-                side: BorderSide(width: 1, color: Theme.of(context).colorScheme.primary),
-                minimumSize: const Size(250, 40)
-              ),
-              child: const Text("View previous questionnaires"),
-            ),
-            const SizedBox(height: 15,),
+            // ElevatedButton(
+            //   onPressed: () {},
+            //   style: ElevatedButton.styleFrom(
+            //     side: BorderSide(width: 1, color: Theme.of(context).colorScheme.primary),
+            //     minimumSize: const Size(250, 40)
+            //   ),
+            //   child: const Text("View previous questionnaires"),
+            // ),
+            // const SizedBox(height: 15,),
             //This is the button for new questionnaires
             ElevatedButton(
               onPressed: () {
@@ -64,7 +65,12 @@ class _PatientViewState extends State<PatientView> {
             //This will be our data viz for answered questionnaires
             //... might merge this with the view questionnaires one
             ElevatedButton(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => PatientDataView())
+                );
+              },
               style: ElevatedButton.styleFrom(
                   side: BorderSide(width: 1, color: Theme.of(context).colorScheme.primary),
                   minimumSize: const Size(250, 40)
@@ -73,7 +79,9 @@ class _PatientViewState extends State<PatientView> {
             ),
             const SizedBox(height: 15,),
             ElevatedButton(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.pop(context);
+              },
               style: ElevatedButton.styleFrom(
                   side: BorderSide(width: 1, color: Theme.of(context).colorScheme.primary),
                   minimumSize: const Size(250, 40)
