@@ -42,6 +42,7 @@ dependencies:
   cloud_firestore: ^4.8.5
   firebase_auth: ^4.7.3
   firebase_messaging: ^14.6.6
+  syncfusion_flutter_charts: ^23.1.36
 
 dev_dependencies:
   flutter_test:
