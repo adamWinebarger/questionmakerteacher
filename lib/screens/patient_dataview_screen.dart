@@ -20,6 +20,23 @@ class _PatientDataViewState extends State<PatientDataView> {
   late List<_AnswerData> _patientDataView;
   late String _currentQuestion;
 
+  void _nextPressed() {
+    setState(() {
+      _currentQuestionNumber++;
+      print(_currentQuestionNumber);
+    });
+  }
+
+  void _previousPressed() {
+    if (_currentQuestionNumber == 0) {
+      Navigator.pop(context);
+    } else {
+      setState(() {
+        _currentQuestionNumber--;
+      });
+    }
+  }
+
   @override
   void initState() {
     // TODO: implement initState
@@ -40,9 +57,12 @@ class _PatientDataViewState extends State<PatientDataView> {
         child: Scaffold(
           body: Center(child: Column(
             children: [
-              SizedBox(height: 15,),
-              Text(_currentQuestion),
-              SizedBox(height: 15,),
+              SizedBox(height: 25,),
+              Text("Question ${_currentQuestionNumber+1}: $_currentQuestion",
+                style: TextStyle(fontSize: 24),
+                textAlign: TextAlign.center,
+              ),
+              //SizedBox(height: 15,),
               SfCircularChart(
                 tooltipBehavior: TooltipBehavior(enable: true),
                 series: <CircularSeries>[
@@ -54,6 +74,23 @@ class _PatientDataViewState extends State<PatientDataView> {
                       isVisible: true
                     ),
                     enableTooltip: true
+                  )
+                ],
+              ),
+              //const SizedBox(height: 25,),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  //if (_currentQuestionNumber > 0)
+                  ElevatedButton(
+                      onPressed: _previousPressed,
+                      child: Text("Back")
+                  ),
+                  SizedBox(width: 15,),
+                  if (_currentQuestionNumber < _sampleAnswerData.length - 1)
+                    ElevatedButton(
+                        onPressed: _nextPressed,
+                        child: Text("Next")
                   )
                 ],
               )
