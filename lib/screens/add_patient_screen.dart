@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:questionmakerteacher/models/answerer.dart';
+import 'package:questionmakerteacher/stringextension.dart';
 
 class AddPatientScreen extends StatefulWidget {
   const AddPatientScreen({super.key, required this.currentUser});
@@ -14,34 +16,66 @@ class AddPatientScreen extends StatefulWidget {
 class _AddPatientState extends State<AddPatientScreen> {
 
   final _formKey = GlobalKey<FormState>();
+  final CollectionReference _crList = FirebaseFirestore.instance.collection("Patients");
+
   String _enteredLastName = "", _enteredPatientCode = "";
   bool _isChecking4PatientData = false;
-  final CollectionReference _crList = FirebaseFirestore.instance.collection("Patients");
   List<String> _patientList = [];
+  ParentOrTeacher? _parentOrTeacher;
 
   Future<String?> _patientAdded2List() async {
     String? errorMessage;
     QueryDocumentSnapshot<Object?>? foundPatient;
+    String? whoIsViewable;
 
-    await _crList.where('lastName', isEqualTo: _enteredLastName)
-        .where('patientCode', isEqualTo: _enteredPatientCode).get().then(
-            (value) {
-              //this basically checks to see if there's any data that matches the query, then, if so,
-              // follows different paths based on how much data is returned.
-              if (value.docs.isEmpty) {
-                errorMessage = "No patient found with these credentials";
-              } else if (value.docs.length > 1) {
-                errorMessage =
-                "Somehow, multiple patients were returned meeting this criteria. This means something is very wrong here. Please try again later";
-              } else {
-                foundPatient = value.docs[0];
-              }
-            });
+    //So the lazy logic here is to essentially to break out codes into a parent and teacher code
+    // Since I didn't want to go back and re-write a whole bunch of stuff. This is essentially going
+    //to check for one or the other, or both if _parentOrTeacher is left blank.
+    if (_parentOrTeacher != ParentOrTeacher.teacher) {
+      //This is essentially the parent case
+      await _crList.where('lastName', isEqualTo: _enteredLastName)
+          .where('childCode', isEqualTo: _enteredPatientCode).get().then(
+              (value) {
+            //this basically checks to see if there's any data that matches the query, then, if so,
+            // follows different paths based on how much data is returned.
+            if (value.docs.isEmpty) {
+              errorMessage = "No patient found with these credentials";
+            } else if (value.docs.length > 1) {
+              errorMessage =
+              "Somehow, multiple patients were returned meeting this criteria. This means something is very wrong here. Please try again later";
+            } else {
+              whoIsViewable = 'viewableChildren';
+              foundPatient = value.docs[0];
+            }
+          });
+    }
+    //Since we're exiting the parent block, it's just going to skip this entirely
+    //if it found a hit here.
+    if (_parentOrTeacher != ParentOrTeacher.parent && errorMessage != null) {
+      //which makes this the teacher case.
+      await _crList.where('lastName', isEqualTo: _enteredLastName)
+          .where('teacherCode', isEqualTo: _enteredPatientCode).get().then(
+              (value) {
+            //this basically checks to see if there's any data that matches the query, then, if so,
+            // follows different paths based on how much data is returned.
+            if (value.docs.isEmpty) {
+              errorMessage = "No patient found with these credentials";
+            } else if (value.docs.length > 1) {
+              errorMessage =
+              "Somehow, multiple patients were returned meeting this criteria. This means something is very wrong here. Please try again later";
+            } else {
+              errorMessage = null; //since we found a hit, the error message needs to be set back to null
+              whoIsViewable = 'viewableStudents';
+              foundPatient = value.docs[0];
+            }
+          });
+    }
     //there should be no instance where the error message and the found patient are both null
     //so we'll add a new patient to the array when the error message is null
     if (errorMessage == null) {
+
       await widget.currentUser.update({
-        'viewableStudents' : FieldValue.arrayUnion([foundPatient!.id])
+        whoIsViewable! : FieldValue.arrayUnion([foundPatient!.id])
       });
     }
     return errorMessage;
@@ -49,15 +83,18 @@ class _AddPatientState extends State<AddPatientScreen> {
 
   //remember that we ripped this from patient_list_screen. If we use it much more, then
   // we may want to consider making this a public method somewhere easily accessible with any class that may need
-  //it. Would probably need an input parameter if we did that... also not sure if we would need another folder
-  // for that... something to think about
+  //it.
+  //UPDATE: This has been changed dramatically.
   Future<List<String>> _getPatientList() async {
     final currentUserData = await widget.currentUser.get();
-    var map2List = (currentUserData['viewableStudents'] as List)?.map((e) => e as String)?.toList();
-    List<String> patientList = (map2List != null && map2List.isNotEmpty) ? map2List : [];
+    var viewableStudents = (currentUserData['viewableStudents'] as List)?.map((e) => e as String)?.toList();
+    var viewableChildren = (currentUserData['viewableChildren'] as List)?.map((e) => e as String)?.toList();
+    List<String> patientList = (viewableStudents != null && viewableStudents.isNotEmpty) ? viewableStudents : [];
+    if (viewableChildren != null && viewableChildren.isNotEmpty) {
+      patientList += viewableChildren;
+    }
     return patientList;
   }
-
 
   void _addPatientPressed() async {
     setState(() {
@@ -124,7 +161,7 @@ class _AddPatientState extends State<AddPatientScreen> {
                 ),
                 const SizedBox(height: 50,),
                 TextFormField(
-                  decoration: const InputDecoration(labelText: "Patient Code:"),
+                  decoration: const InputDecoration(labelText: "Code:"),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty || value.trim().length != 40) {
                       return "Invalid Patient Code Detected";
@@ -134,6 +171,25 @@ class _AddPatientState extends State<AddPatientScreen> {
                   onSaved: (value) {
                     _enteredPatientCode = value!;
                   },
+                ),
+                const SizedBox(height: 25,),
+                DropdownButtonFormField(
+                  decoration: const InputDecoration(
+                    label: Text(
+                        "Which option more closely describes your relationship with the child?",
+                      style: TextStyle(fontSize: 12),
+                    ),
+
+                  ),
+                    items: [
+                      const DropdownMenuItem(
+                        child: Text(""),
+                        value: null,
+                      ),
+                      for (final selection in ParentOrTeacher.values)
+                        DropdownMenuItem(child: Text(selection.name.capitalize()), value: selection,)
+                    ],
+                    onChanged: (value) => _parentOrTeacher = value
                 ),
                 const SizedBox(height: 50,),
                 ElevatedButton(
@@ -154,5 +210,4 @@ class _AddPatientState extends State<AddPatientScreen> {
       ),
     );
   }
-
 }

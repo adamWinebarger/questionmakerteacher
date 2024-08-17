@@ -1,0 +1,11 @@
+framework module sf_symbols {
+  umbrella header "sf_symbols-umbrella.h"
+
+  export *
+  module * { export * }
+}
+
+module sf_symbols.Swift {
+  header "sf_symbols-Swift.h"
+  requires objc
+}

@@ -35,6 +35,7 @@ class _AuthScreenState extends State<AuthScreen> {
       _isAuthenticating = true;
     });
 
+    //So this ios
     final isValid = _formKey.currentState!.validate();
 
     if (!isValid) {

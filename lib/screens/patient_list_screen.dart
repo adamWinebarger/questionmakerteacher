@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:questionmakerteacher/data/patient_list_data.dart';
+import 'package:questionmakerteacher/models/answerer.dart';
 import 'package:questionmakerteacher/screens/add_patient_screen.dart';
 import 'package:questionmakerteacher/screens/patient_view.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -23,7 +24,7 @@ class PatientListScreen extends StatefulWidget {
 class _PatientListScreenState extends State<PatientListScreen> {
 
   bool _isFetchingData = true;
-  List<String> _patientList = [];
+  List<String> _patientList = [], _viewableChildren = [], _viewableStudents = [];
   final _formKey = GlobalKey<FormState>();
   final CollectionReference _crList = FirebaseFirestore.instance.collection("Patients");
   final DocumentReference _currentUserDoc = FirebaseFirestore.instance.collection("users").
@@ -37,19 +38,31 @@ class _PatientListScreenState extends State<PatientListScreen> {
   }
 
   Future<List<String>> _getApprovedPatients() async {
-    final currentUserData = await _currentUserDoc.get();
-    var map2List = (currentUserData['viewableStudents'] as List)?.map((item) => item as String)?.toList();
-    List<String> patientList = (map2List != null && map2List.isNotEmpty) ? map2List : [];
-    return patientList;
+    final currentUserDoc = await _currentUserDoc.get();
+    final currentUserData = currentUserDoc.data() as Map<String, dynamic>;
+    var viewableStudents = (currentUserData.containsKey('viewableStudents')) ?
+      (currentUserData['viewableStudents'] as List?)?.map((item) => item as String).toList()
+          ?? [] : [];
+    //print(viewableStudents);
+    var viewableChildren = currentUserData.containsKey('viewableChildren') ?
+      (currentUserData['viewableChildren'] as List?)?.map((item) => item as String).toList()
+        ?? [] : [];
+    //List<String> patientList = (map2List != null && map2List.isNotEmpty) ? map2List : [];
+    _viewableStudents = (viewableStudents.isNotEmpty) ? viewableStudents as List<String> : [];
+    _viewableChildren = (viewableChildren.isNotEmpty) ? viewableChildren as List<String> : [];
+    return [...viewableChildren, ...viewableStudents];
   }
 
   void _go2PatientView2(QueryDocumentSnapshot selectedPatient) {
     Patient patient = Patient.fromJson(selectedPatient.data() as Map<String, dynamic>);
+    print(selectedPatient.id);
     patient.path = selectedPatient.id;
+    ParentOrTeacher parentOrTeacher = (_viewableStudents.contains(selectedPatient.id))
+        ? ParentOrTeacher.teacher : ParentOrTeacher.parent;
     //print(patient.path);
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => PatientView(currentPatient: patient))
+      MaterialPageRoute(builder: (context) => PatientView(currentPatient: patient, parentOrTeacher: parentOrTeacher))
     );
   }
 

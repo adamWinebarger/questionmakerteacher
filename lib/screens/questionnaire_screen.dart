@@ -7,19 +7,15 @@ import 'package:questionmakerteacher/models/patient.dart';
 import 'package:questionmakerteacher/models/questionnaire.dart';
 import 'package:questionmakerteacher/stringextension.dart';
 
+import '../models/answer_data.dart';
+
 final _authenticatedUser = FirebaseAuth.instance.currentUser!;
 
-Map<String, Answers> _answerSelection = {
-  "Not at All" : Answers.notAtAll,
-  "Sometimes" : Answers.sometimes,
-  "A Lot" : Answers.alot,
-  "Always" : Answers.always
-};
-
 class QuestionnaireScreen extends StatefulWidget {
-  const QuestionnaireScreen({super.key, required this.patientInQuestion});
+  const QuestionnaireScreen({super.key, required this.patientInQuestion, required this.parentOrTeacher});
 
   final Patient patientInQuestion;
+  final ParentOrTeacher parentOrTeacher;
 
   @override
   State<StatefulWidget> createState() => _QuestionnaireScreenState();
@@ -34,6 +30,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
   final Map<String, dynamic> _answerMap = {};
 
   late Answerer _currentAnswerer;
+  late List<String> _questions;
 
   int _count = 0;
   Answers? _selectedAnswer;
@@ -42,7 +39,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
   List<Widget> _setupAnswerRadioButtons() {
     List<Widget> widgetList = [];
 
-      for (final category in _answerSelection.entries) {
+      for (final category in answerSelection.entries) {
         widgetList.add(
             ListTile(
               title: Text(category.key),
@@ -101,11 +98,11 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
       await FirebaseFirestore.instance.collection('Patients')
         .doc(widget.patientInQuestion.path).collection('Answers').doc(answerDocumentPath)
         .set({
-          'Date/Time' : DateTime.now(),
+          'Timestamp' : DateTime.now(),
           'answererLastName' : _currentAnswerer.lastName,
           'answererFirstName' : _currentAnswerer.firstName,
-          'parentOrTeacher' : _currentAnswerer.parentOrTeacher.name,
-          'Answers' : _answerMap,
+          'parentOrTeacher' : widget.parentOrTeacher.name,
+          'Answers' : _answerMap, //It looks like we aren't using any of the info from our Questionnaire class and instead are generating this all locally... wth
           'timeOfDay' : _selectedTimeOfInteraction!.name
       });
 
@@ -125,6 +122,13 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
     super.initState();
     setState(() {
       _setCurrentAnswerer();
+      _questions = widget.parentOrTeacher == ParentOrTeacher.parent
+          ? (widget.patientInQuestion.parentQuestions)
+          .map((item) => item.toString())
+          .toList()
+          : (widget.patientInQuestion.teacherQuestions)
+          .map((item) => item.toString())
+          .toList();
     });
   }
 
@@ -157,7 +161,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                   height: 75,
                   child: Text(
                     (_count > -1) ?
-                      widget.patientInQuestion.teacherQuestions[_count] :
+                      _questions[_count] :
                         "Select the time of day that this questionnaire reflects:",
                     style: const TextStyle(fontSize: 18),
                   ),
@@ -177,7 +181,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                   ElevatedButton(
                     onPressed: _nextPressed,
                     child: Text(
-                      _count == widget.patientInQuestion.teacherQuestions.length - 1 ?
+                      _count == _questions.length - 1 ?
                         "Submit" : "Next"
                     )
                   ),
@@ -217,5 +221,6 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
         ),
       ),
     );
+
   }
 }

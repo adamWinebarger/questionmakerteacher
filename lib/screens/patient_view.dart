@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:questionmakerteacher/models/answerer.dart';
 import 'package:questionmakerteacher/models/patient.dart';
 import 'package:questionmakerteacher/screens/patient_dataview_screen.dart';
 import 'package:questionmakerteacher/screens/questionnaire_screen.dart';
 import 'package:questionmakerteacher/widgets/test_widgets.dart';
 
 class PatientView extends StatefulWidget {
-  const PatientView({super.key, required this.currentPatient});
+  const PatientView({super.key, required this.currentPatient, required this.parentOrTeacher});
 
   final Patient currentPatient;
+  final ParentOrTeacher parentOrTeacher;
 
   @override
   State<StatefulWidget> createState() {
@@ -18,8 +20,11 @@ class PatientView extends StatefulWidget {
 
 class _PatientViewState extends State<PatientView> {
 
+
   @override
   Widget build(context) {
+    final currentPatientReferenceString = "${widget.currentPatient.lastName}, ${widget.currentPatient.firstName} (${widget.currentPatient.patientCode})";
+
     return Scaffold(
       appBar: AppBar(title: Text("${widget.currentPatient.lastName}, ${widget.currentPatient.firstName}"),),
       body: SingleChildScrollView(
@@ -51,7 +56,7 @@ class _PatientViewState extends State<PatientView> {
               onPressed: () {
                 Navigator.push(
                     context, 
-                    MaterialPageRoute(builder: (context) => QuestionnaireScreen(patientInQuestion: widget.currentPatient)
+                    MaterialPageRoute(builder: (context) => QuestionnaireScreen(patientInQuestion: widget.currentPatient, parentOrTeacher:  widget.parentOrTeacher)
                     )
                 );
               },
@@ -64,11 +69,12 @@ class _PatientViewState extends State<PatientView> {
             const SizedBox(height: 15,),
             //This will be our data viz for answered questionnaires
             //... might merge this with the view questionnaires one
+            //This is the button for viewing questionnaire data
             ElevatedButton(
               onPressed: () {
                 Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => PatientDataView())
+                    MaterialPageRoute(builder: (context) => PatientDataView(patientReference: currentPatientReferenceString))
                 );
               },
               style: ElevatedButton.styleFrom(
