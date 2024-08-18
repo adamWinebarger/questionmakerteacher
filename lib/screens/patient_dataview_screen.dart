@@ -37,7 +37,7 @@ class _PatientDataViewState extends State<PatientDataView> {
   List<AnswerData> _answerDataList = [];
 
 
-  DateTime _fromDate = DateTime.now().subtract(const Duration(days: 7)), _toDate = DateTime.now();
+  DateTime _fromDate = DateTime.now().subtract(Duration(days: 7)), _toDate = DateTime.now();
 
   final _noAnswersWidget = const Center(child:
     Text("No data available.\n Maybe adjust your search parameters?",
@@ -49,7 +49,8 @@ class _PatientDataViewState extends State<PatientDataView> {
 
   void _nextPressed() {
     setState(() {
-      _currentQuestionNumber++;
+      //_currentQuestionNumber++;
+      _currentQuestion = _answerDataList[++_currentQuestionNumber].question;
       print(_currentQuestionNumber);
     });
   }
@@ -59,7 +60,8 @@ class _PatientDataViewState extends State<PatientDataView> {
       Navigator.pop(context);
     } else {
       setState(() {
-        _currentQuestionNumber--;
+        //_currentQuestionNumber--;
+        _currentQuestion = _answerDataList[--_currentQuestionNumber].question;
       });
     }
   }
@@ -100,22 +102,23 @@ class _PatientDataViewState extends State<PatientDataView> {
         //"Answer Map" by 1 any time a new answer pops, basically.
         print("Key: $key; value: ${answers[key]}");
 
-        if (avList.contains(key)) {
-          final requisiteAnswerData = avList.firstWhere((element) => element == key).add1(answers[key]);
-          //print("Requisite Answer Data: ${requisiteAnswerData.question}");
-          //requisiteAnswerData._ad
-
-        } else {
-          //avList.add(_AnswerData.withStringSelection(avList.firstWhere((element) => element == key), 1));
-          //Not sure what to put here
-          print("Else condition fired");
+        avList.firstWhere((element) => element.question == key,
+        orElse: () {
+          //catchment for if it doesn't find anything
           final temp = AnswerData(key);
           temp.add1(answers[key]);
           avList.add(temp);
-        }
+          return temp;
+        }).add1(answers[key]);
       }
     }
     print("AVList: $avList");
+    for (final item in avList) {
+      print("${item.question} :");
+      for (final answer in item.answers) {
+        print("\t${answer.answer} : ${answer.value}");
+      }
+    }
     return avList;
 
   }
@@ -175,19 +178,28 @@ class _PatientDataViewState extends State<PatientDataView> {
         const SizedBox(height: 15,),
         SfCircularChart(
           tooltipBehavior: TooltipBehavior(enable: true),
-          legend: Legend(
+          legend: const Legend(
             isVisible: true,
             position: LegendPosition.right,
-            overflowMode: LegendItemOverflowMode.wrap
+            overflowMode: LegendItemOverflowMode.wrap,
           ),
           series: <CircularSeries>[
             PieSeries<AnswerValues, String>(
-              dataSource: _answerDataList[_currentQuestionNumber].answers
-                .where((answer) => answer.value > 0).toList(),
+              dataSource: _answerDataList[_currentQuestionNumber].answers,
               xValueMapper: (AnswerValues answer, _) => AnswerMap[answer.answer],
               yValueMapper: (AnswerValues answer, _) => answer.value,
+              // pointColorMapper: (AnswerValues answer, _) {
+              //   switch (AnswerMap[answer.answer]) {
+              //     case "Not at all" : return Color.fromARGB(255, 8, 22, 87);
+              //     case "Sometimes" : return Color.fromARGB(255, 77, 25, 27);
+              //     case "A lot" : return Color.fromARGB(255, 130, 14, 22);
+              //     case "Always" : return Color.fromARGB(255, 250, 128, 114);
+              //     default: return Colors.white;
+              //   }
+              // },
               dataLabelSettings: const DataLabelSettings(
-                isVisible: true
+                isVisible: true,
+                showZeroValue: false
               ),
               enableTooltip: true
             )

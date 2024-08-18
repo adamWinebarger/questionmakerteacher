@@ -1,3 +1,5 @@
+//import 'dart:js_interop';
+
 import 'package:questionmakerteacher/models/questionnaire.dart';
 
 import '../data/answer_map.dart';
@@ -83,7 +85,13 @@ class AnswerData {
   }
 
   void add1(dynamic which) {
-    answers.firstWhere((element) => element.answer.name == which.toString()).value++;
+    print("Which = $which");
+    //answers.firstWhere((element) => element.answer.name == which.toString()).value++;
+    for (final answer in answers) {
+      if (answer.answer.name == which.toString()) {
+        answer.value++;
+      }
+    }
   }
 
   void _addAnswerToData(String response) {
