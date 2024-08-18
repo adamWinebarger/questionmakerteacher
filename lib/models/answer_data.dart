@@ -15,23 +15,9 @@ class AnswerValues {
   final Answers answer;
   int value;
 
-  @override
-  bool operator ==(Object other) {
-
-    if (identical(this,other)) {
-      return true;
-    }
-
-    if (other is Answers) {
-      return other == answer;
-    }
-
-    if (other is String) {
-      return other == answer.name;
-    }
-
-    return other is AnswerValues && other.answer == answer;
-  }
+  bool answersMatch(Answers answer) => this.answer == answer;
+  bool namesMatch(String name) => answer.name == name;
+  bool answerValuesMatch(AnswerValues av) => answer == av.answer;
 
   void increment() {
     value++;
@@ -96,6 +82,10 @@ class AnswerData {
     }
   }
 
+  void add1(dynamic which) {
+    answers.firstWhere((element) => element.answer.name == which.toString()).value++;
+  }
+
   void _addAnswerToData(String response) {
     if (answers.contains(response)) {
       //print(answers.where((element) => false));
@@ -104,22 +94,13 @@ class AnswerData {
     } else {
       //print("Adding answer $response to the thing");
       answers.add(AnswerValues(answerSelection[response]!, 1)); //Adds our specified enum value and increments it by 1
-
     }
   }
 
   //Since we're lazy, we essentially want == to compare question values in order to
   //check if a question is already in our list. Or something.
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) {
-      return true;
-    }
-
-    if (other is String) {
-      return other == question;
-    }
-    return other is AnswerData && other.question == question;
+  bool questionsMatch(String question) {
+    return this.question == question;
   }
 
 //We'll likely need a function to convert the answer data...

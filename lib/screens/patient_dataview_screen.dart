@@ -7,6 +7,7 @@ import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:questionmakerteacher/data/patient_test_data.dart';
 import 'package:questionmakerteacher/data/answer_map.dart';
 import 'package:questionmakerteacher/models/patient.dart';
+import '../models/answer_data.dart';
 import 'questionnaire_screen.dart';
 
 Map<String, Answers> _answerSelection = {
@@ -33,7 +34,7 @@ class _PatientDataViewState extends State<PatientDataView> {
   bool _isFetchingData = false, _fetchedData = false;
   int _currentQuestionNumber = 0, _dayRange = 7;
 
-  List<_AnswerData> _answerDataList = [];
+  List<AnswerData> _answerDataList = [];
 
 
   DateTime _fromDate = DateTime.now().subtract(const Duration(days: 7)), _toDate = DateTime.now();
@@ -43,7 +44,7 @@ class _PatientDataViewState extends State<PatientDataView> {
       textAlign: TextAlign.center,)
   );
 
-  late List<_AnswerData> _patientDataView;
+  late List<AnswerData> _patientDataView;
   late String _currentQuestion;
 
   void _nextPressed() {
@@ -64,14 +65,14 @@ class _PatientDataViewState extends State<PatientDataView> {
   }
 
   //Async method for grabbing the Answers from the firebase database
-  Future<List<_AnswerData>> _getAnswerDocumentsFromDatabase() async {
+  Future<List<AnswerData>> _getAnswerDocumentsFromDatabase() async {
     //So what we need is the Answers Documents that are within the from date and the to date.
     //From there, we would want to look at the Answers subfield within, grab the question,
     //then check if the question is already in our AV list. If it is, then increment the relevant
     //enum pattern by 1; if it's not, then add the question in there and then increment the relevant
     //enum pattern by 1
 
-    List<_AnswerData> avList = [];
+    List<AnswerData> avList = [];
 
     final CollectionReference _crList = FirebaseFirestore.instance.collection("Patients")
         .doc(widget.patientReference).collection("Answers");
@@ -95,14 +96,22 @@ class _PatientDataViewState extends State<PatientDataView> {
         //in addition to incrementing the corresponding value; and if it does, then it only needs
         //to increment the corresponding enum value for the question
 
+        //So key is the "question" while value is the answer - and we need to increment the
+        //"Answer Map" by 1 any time a new answer pops, basically.
+        print("Key: $key; value: ${answers[key]}");
+
         if (avList.contains(key)) {
-          final requisiteAnswerData = avList.firstWhere((element) => element == key);
-          print("Requisite Answer Data: ${requisiteAnswerData.question}");
+          final requisiteAnswerData = avList.firstWhere((element) => element == key).add1(answers[key]);
+          //print("Requisite Answer Data: ${requisiteAnswerData.question}");
           //requisiteAnswerData._ad
 
         } else {
           //avList.add(_AnswerData.withStringSelection(avList.firstWhere((element) => element == key), 1));
           //Not sure what to put here
+          print("Else condition fired");
+          final temp = AnswerData(key);
+          temp.add1(answers[key]);
+          avList.add(temp);
         }
       }
     }
@@ -113,8 +122,8 @@ class _PatientDataViewState extends State<PatientDataView> {
 
   //Async method for grabbing data from the cloud firestore database and putting it into list format
   // for the infographic to then render
-  Future<List<_AnswerData>> _getAnswerDataListFromDatabase() async {
-    List<_AnswerData> _anwerdataList = [];
+  Future<List<AnswerData>> _getAnswerDataListFromDatabase() async {
+    List<AnswerData> _anwerdataList = [];
     return _anwerdataList;
   }
 
@@ -133,6 +142,7 @@ class _PatientDataViewState extends State<PatientDataView> {
     _getAnswerDocumentsFromDatabase().then((value) {
       setState(() {
 
+        print(value);
         _answerDataList = value;
         //print(_answerDataList);
         print("Answer Data List insdide setState: $_answerDataList");
@@ -166,10 +176,10 @@ class _PatientDataViewState extends State<PatientDataView> {
         SfCircularChart(
           tooltipBehavior: TooltipBehavior(enable: true),
           series: <CircularSeries>[
-            PieSeries<_AnswerValues, String>(
+            PieSeries<AnswerValues, String>(
               dataSource: _answerDataList[_currentQuestionNumber].answers,
-              xValueMapper: (_AnswerValues answer, _) => AnswerMap[answer.answer],
-              yValueMapper: (_AnswerValues answer, _) => answer.value,
+              xValueMapper: (AnswerValues answer, _) => AnswerMap[answer.answer],
+              yValueMapper: (AnswerValues answer, _) => answer.value,
               dataLabelSettings: const DataLabelSettings(
                 isVisible: true
               ),
@@ -207,155 +217,37 @@ class _PatientDataViewState extends State<PatientDataView> {
 //                 textAlign: TextAlign.center,
 //
 
-class _AnswerValues {
-  _AnswerValues(this.answer, this.value);
-
-  final Answers answer;
-  int value;
-
-  @override
-  bool operator ==(Object other) {
-
-    if (identical(this,other)) {
-      return true;
-    }
-
-    if (other is Answers) {
-      return other == answer;
-    }
-
-    if (other is String) {
-      return other == answer.name;
-    }
-
-    return other is _AnswerValues && other.answer == answer;
-  }
-
-  void increment() {
-    value++;
-  }
-
-  void incrementBy(int inc) {
-    value += inc;
-  }
-
-  void setValue(int set) {
-    value = set;
-  }
-}
-
-/*
-* So essentially, a few things need to happen in the process here when bringing in data
-* from the Answers subcollection within a given Patient's document.
-*
-* First, it needs to do a query for Answers and only pull back the Documents within Answers that
-* fall within the Date range determined by the query (Default will be last 7 Days but we will have options
-* within there for others.
-*
-* Secondly, once we've grabbed the requsite Answers docs from the Collection, we'll
-* turn each Document that we've grabbed from Answers into a Questionnaire (gets us
-* using that class again anyways).
-*
-* Then for each question within our Questionnaire object, we'll need to check if it
-* already has a corresponding _AnswerData object (would be good to have a list for these),
-* and if not create one.
-*
-* In any case, we will need to increment the corresponding answer based on how it was answered in the questionnaire
-*
-* With that info, we should be able to make a simple List of our _AnswerData class and have that be usable for these
-* infographics.
-*/
-
-//So _AnswerData should essentially model the Answers sub-document for a given Patient
-//in our firestore database. But given the fact that... actually, no, shit, this needs a rewrite
-class _AnswerData {
-  _AnswerData.withMap(this.question, this.answers);
-
-  final String question;
-  List<_AnswerValues> answers = [];
-
-  _AnswerData(this.question) {
-    for (var key in AnswerMap.keys) {
-      answers.add(_AnswerValues(key, 0));
-    }
-  }
-
-  _AnswerData.withStringSelection(this.question, String selection) {
-    Answers? a = _answerSelection[selection];
-
-    if (a != null) {
-      if (answers.contains(a)) {
-        //print("In with String Selection. Question: ${this.question}, Selection: $selection");
-        print(answers.where((element) => false));
-      } else {
-        //print("In with String Selection. Question: ${this.question}, Selection: $selection");
-        answers.add(_AnswerValues(_answerSelection[selection]!, 1)); //Adds our specified enum value and increments it by 1
-      }
-    }
-  }
-
-  void _addAnswerToData(String response) {
-    if (answers.contains(response)) {
-      //print(answers.where((element) => false));
-      print("Answer didn't contain $response");
-
-    } else {
-      //print("Adding answer $response to the thing");
-      answers.add(_AnswerValues(_answerSelection[response]!, 1)); //Adds our specified enum value and increments it by 1
-
-    }
-  }
-
-  //Since we're lazy, we essentially want == to compare question values in order to
-  //check if a question is already in our list. Or something.
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) {
-      return true;
-    }
-
-    if (other is String) {
-      return other == question;
-    }
-    return other is _AnswerData && other.question == question;
-  }
-
-  //We'll likely need a function to convert the answer data...
-  //fuck, so we need some sort of constructor here that will essnetially
-
-}
-
-_AnswerData _sample1 = _AnswerData.withMap("The child did their homework",
+AnswerData _sample1 = AnswerData.withMap("The child did their homework",
     [
-      _AnswerValues(Answers.notAtAll, 4),
-      _AnswerValues(Answers.sometimes, 3),
-      _AnswerValues(Answers.alot, 6),
-      _AnswerValues(Answers.always, 7)
+      AnswerValues(Answers.notAtAll, 4),
+      AnswerValues(Answers.sometimes, 3),
+      AnswerValues(Answers.alot, 6),
+      AnswerValues(Answers.always, 7)
     ]
 ),
-  _sample2 = _AnswerData.withMap("The child stayed on task",
+  _sample2 = AnswerData.withMap("The child stayed on task",
       [
-        _AnswerValues(Answers.notAtAll, 7),
-        _AnswerValues(Answers.sometimes, 4),
-        _AnswerValues(Answers.alot, 3),
-        _AnswerValues(Answers.always, 9)
+        AnswerValues(Answers.notAtAll, 7),
+        AnswerValues(Answers.sometimes, 4),
+        AnswerValues(Answers.alot, 3),
+        AnswerValues(Answers.always, 9)
       ]
   ),
-  _sample3 = _AnswerData.withMap("The child did things when asked the first time" ,
+  _sample3 = AnswerData.withMap("The child did things when asked the first time" ,
       [
-        _AnswerValues(Answers.notAtAll, 3),
-        _AnswerValues(Answers.sometimes, 7),
-        _AnswerValues(Answers.alot, 8),
-        _AnswerValues(Answers.always, 4)
+        AnswerValues(Answers.notAtAll, 3),
+        AnswerValues(Answers.sometimes, 7),
+        AnswerValues(Answers.alot, 8),
+        AnswerValues(Answers.always, 4)
       ]
   ),
-  _sample4 = _AnswerData.withMap("The child is pretty alright I guess",
+  _sample4 = AnswerData.withMap("The child is pretty alright I guess",
       [
-        _AnswerValues(Answers.notAtAll, 5),
-        _AnswerValues(Answers.sometimes, 4),
-        _AnswerValues(Answers.alot, 6),
-        _AnswerValues(Answers.always, 5)
+        AnswerValues(Answers.notAtAll, 5),
+        AnswerValues(Answers.sometimes, 4),
+        AnswerValues(Answers.alot, 6),
+        AnswerValues(Answers.always, 5)
       ]
 );
 
-List<_AnswerData> _sampleAnswerData = [_sample1, _sample2, _sample3, _sample4];
+List<AnswerData> _sampleAnswerData = [_sample1, _sample2, _sample3, _sample4];
