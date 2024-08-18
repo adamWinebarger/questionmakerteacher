@@ -175,9 +175,15 @@ class _PatientDataViewState extends State<PatientDataView> {
         const SizedBox(height: 15,),
         SfCircularChart(
           tooltipBehavior: TooltipBehavior(enable: true),
+          legend: Legend(
+            isVisible: true,
+            position: LegendPosition.right,
+            overflowMode: LegendItemOverflowMode.wrap
+          ),
           series: <CircularSeries>[
             PieSeries<AnswerValues, String>(
-              dataSource: _answerDataList[_currentQuestionNumber].answers,
+              dataSource: _answerDataList[_currentQuestionNumber].answers
+                .where((answer) => answer.value > 0).toList(),
               xValueMapper: (AnswerValues answer, _) => AnswerMap[answer.answer],
               yValueMapper: (AnswerValues answer, _) => answer.value,
               dataLabelSettings: const DataLabelSettings(
