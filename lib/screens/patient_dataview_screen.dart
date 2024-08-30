@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:questionmakerteacher/models/answerer.dart';
 import 'package:questionmakerteacher/models/questionnaire.dart';
+import 'package:questionmakerteacher/stringextension.dart';
 import 'package:questionmakerteacher/widgets/test_widgets.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:questionmakerteacher/data/patient_test_data.dart';
@@ -17,10 +19,28 @@ Map<String, Answers> _answerSelection = {
   "always" : Answers.always
 };
 
+enum _TimeOfDay {
+  morning,
+  afternoon,
+  evening,
+  all
+}
+
+enum _Lookback {
+  today,
+  lastWeek,
+  lastMonth,
+  allTime,
+  specificTimeframe
+}
+
 class PatientDataView extends StatefulWidget {
-  const PatientDataView({super.key, required this.patientReference});
+  const PatientDataView({super.key, required this.patientReference,
+    required this.teacherCanViewParentReports, required this.parentOrTeacher});
 
   final String patientReference;
+  final bool teacherCanViewParentReports;
+  final ParentOrTeacher parentOrTeacher;
 
   @override
   State<StatefulWidget> createState() => _PatientDataViewState();
@@ -29,29 +49,40 @@ class PatientDataView extends StatefulWidget {
 
 class _PatientDataViewState extends State<PatientDataView> {
 
+  final _noAnswersWidget = const Center(child:
+  Text("No data available.\n Maybe adjust your search parameters?",
+    textAlign: TextAlign.center,)
+  );
+
   //variables that will determine what widget to display based on whether the app is fetching data.
   //whether it's found it, and should also probably handle what happens if and when it does find data
   bool _isFetchingData = false, _fetchedData = false;
   int _currentQuestionNumber = 0, _dayRange = 7;
+  _TimeOfDay _timeOfDay = _TimeOfDay.all;
+  String _selectedParentTeacherFilter = "All";
+  _Lookback _currentLookbackSelection = _Lookback.today;
 
   List<AnswerData> _answerDataList = [];
 
-
-  DateTime _fromDate = DateTime.now().subtract(Duration(days: 7)), _toDate = DateTime.now();
-
-  final _noAnswersWidget = const Center(child:
-    Text("No data available.\n Maybe adjust your search parameters?",
-      textAlign: TextAlign.center,)
-  );
+  DateTime _fromDate = DateTime.now().subtract(const Duration(days: 7)), _toDate = DateTime.now();
+  // DateTime _fromDate = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day),
+  //   _toDate = DateTime.now();
 
   late List<AnswerData> _patientDataView;
   late String _currentQuestion;
+  late final Map<String, _Lookback> _dateRangeMap = {
+    "Today" : _Lookback.today,
+    "Past Week" : _Lookback.lastWeek,
+    "Past Month" : _Lookback.lastMonth,
+    "All Time" : _Lookback.allTime,
+    "Select Date Range" : _Lookback.specificTimeframe
+  };
 
   void _nextPressed() {
     setState(() {
       //_currentQuestionNumber++;
       _currentQuestion = _answerDataList[++_currentQuestionNumber].question;
-      print(_currentQuestionNumber);
+      //print(_currentQuestionNumber);
     });
   }
 
@@ -67,6 +98,7 @@ class _PatientDataViewState extends State<PatientDataView> {
   }
 
   //Async method for grabbing the Answers from the firebase database
+  //Async method for grabbing the Answers from the firebase database
   Future<List<AnswerData>> _getAnswerDocumentsFromDatabase() async {
     //So what we need is the Answers Documents that are within the from date and the to date.
     //From there, we would want to look at the Answers subfield within, grab the question,
@@ -76,86 +108,125 @@ class _PatientDataViewState extends State<PatientDataView> {
 
     List<AnswerData> avList = [];
 
-    final CollectionReference _crList = FirebaseFirestore.instance.collection("Patients")
+    final CollectionReference crList = FirebaseFirestore.instance.collection("Patients")
         .doc(widget.patientReference).collection("Answers");
     //query to look at docs within a given tim period (from and to will be adjustable)
-    final QuerySnapshot requisiteAnswersQuery = await _crList
-        .where("Timestamp", isGreaterThanOrEqualTo: _fromDate)
-        .where("Timestamp", isLessThanOrEqualTo: _toDate).get();
+    Query requisiteAnswersQuery = crList.where("Timestamp", isLessThanOrEqualTo: _toDate);
 
-    //This for examines each individual document from our query
-    for (var docSnapshot in requisiteAnswersQuery.docs) {
-      //print("Doc snnapshot: ${docSnapshot.id} => ${docSnapshot.data()}");
-      //gotta load them into a map before we can do anything
-      Map<String, dynamic> documentData = docSnapshot.data() as Map<String, dynamic>;
-      //print('Data ${documentData['Answers']}');
-      //Gotta do the same with our 'Answers' attribute within the doc, which is all we really want here
-      Map<String, dynamic> answers = documentData['Answers'];
-      for (String key in answers.keys) {
-        //print(answers[key]);
-        //Now in our forLoop, we gotta check if avList contains already contains the question
-        //shown in the key section, if it doesn't, then it needs to add the question into avList
-        //in addition to incrementing the corresponding value; and if it does, then it only needs
-        //to increment the corresponding enum value for the question
-
-        //So key is the "question" while value is the answer - and we need to increment the
-        //"Answer Map" by 1 any time a new answer pops, basically.
-        print("Key: $key; value: ${answers[key]}");
-
-        avList.firstWhere((element) => element.question == key,
-        orElse: () {
-          //catchment for if it doesn't find anything
-          final temp = AnswerData(key);
-          temp.add1(answers[key]);
-          avList.add(temp);
-          return temp;
-        }).add1(answers[key]);
-      }
+    if (_currentLookbackSelection != _Lookback.allTime) {
+      requisiteAnswersQuery = requisiteAnswersQuery.where("Timestamp", isGreaterThanOrEqualTo: _fromDate);
     }
-    print("AVList: $avList");
-    for (final item in avList) {
-      print("${item.question} :");
-      for (final answer in item.answers) {
-        print("\t${answer.answer} : ${answer.value}");
-      }
+
+    if (widget.parentOrTeacher == ParentOrTeacher.teacher && widget.teacherCanViewParentReports == false) {
+      requisiteAnswersQuery = requisiteAnswersQuery.where("parentOrTeacher", isEqualTo: "teacher");
+    } else if (_selectedParentTeacherFilter != "All") {
+      requisiteAnswersQuery = requisiteAnswersQuery
+          .where("parentOrTeacher", isEqualTo: (_selectedParentTeacherFilter == "Parent") ? "parent" : "teacher");
     }
+
+    if (_timeOfDay != _TimeOfDay.all) {
+      requisiteAnswersQuery = requisiteAnswersQuery.where("timeOfDay", isEqualTo: _timeOfDay.name);
+    }
+
+    try {
+      final QuerySnapshot requisiteAnswersQuerySnapshot = await requisiteAnswersQuery.get();
+      //This for examines each individual document from our query
+      for (var docSnapshot in requisiteAnswersQuerySnapshot.docs) {
+        print("Doc snnapshot: ${docSnapshot.id} => ${docSnapshot.data()}");
+        //gotta load them into a map before we can do anything
+        Map<String, dynamic> documentData = docSnapshot.data() as Map<String, dynamic>;
+        //print('Data ${documentData['Answers']}');
+        //Gotta do the same with our 'Answers' attribute within the doc, which is all we really want here
+        Map<String, dynamic> answers = documentData['Answers'];
+        for (String key in answers.keys) {
+          //print(answers[key]);
+          //Now in our forLoop, we gotta check if avList contains already contains the question
+          //shown in the key section, if it doesn't, then it needs to add the question into avList
+          //in addition to incrementing the corresponding value; and if it does, then it only needs
+          //to increment the corresponding enum value for the question
+
+          //So key is the "question" while value is the answer - and we need to increment the
+          //"Answer Map" by 1 any time a new answer pops, basically.
+          //print("Key: $key; value: ${answers[key]}");
+
+          avList.firstWhere((element) => element.question == key,
+              orElse: () {
+                //catchment for if it doesn't find anything
+                final temp = AnswerData(key);
+                //temp.add1(answers[key]);
+                avList.add(temp);
+                return temp;
+              }).add1(answers[key]);
+        }
+      }
+    } catch (e) {
+      //print(e);
+      return [];
+    }
+    //print("AVList: $avList");
+    // for (final item in avList) {
+    //   print("${item.question} :");
+    //   for (final answer in item.answers) {
+    //     print("\t${answer.answer} : ${answer.value}");
+    //   }
+    // }
     return avList;
-
   }
 
-  //Async method for grabbing data from the cloud firestore database and putting it into list format
-  // for the infographic to then render
-  Future<List<AnswerData>> _getAnswerDataListFromDatabase() async {
-    List<AnswerData> _anwerdataList = [];
-    return _anwerdataList;
+  void _updateDateRange() {
+    DateTime fromDate, toDate = DateTime.now();
+    switch (_currentLookbackSelection) {
+      case _Lookback.today:
+        fromDate = DateTime(toDate.year, toDate.month, toDate.day);
+        break;
+      case _Lookback.lastWeek:
+        fromDate = toDate.subtract(const Duration(days: 7));
+        break;
+      case _Lookback.lastMonth:
+        fromDate = toDate.subtract(const Duration(days: 30));
+        break;
+      case _Lookback.allTime:
+        fromDate = toDate;
+        break;
+      default:
+        return;
+    }
+
+    setState(() {
+      _fromDate = fromDate;
+      _toDate = toDate;
+    });
+    _updateState();
   }
 
-  @override
-  void initState() {
-    // TODO: implement initState
-    //_patientDataView = sampleAnswers[sampleAnswers.keys.first];
-
-    //print(widget.patientReference);
-    //_currentQuestion = _sampleAnswerData[_currentQuestionNumber].question;
-    super.initState();
+  void _updateState() {
     setState(() {
       _isFetchingData = true;
     });
     //_getAnswerDocumentsFromDatabase();
     _getAnswerDocumentsFromDatabase().then((value) {
       setState(() {
-
-        print(value);
+        //print("Value $value");
         _answerDataList = value;
         //print(_answerDataList);
-        print("Answer Data List insdide setState: $_answerDataList");
-        _currentQuestion = _answerDataList[0].question;
+        //print("Answer Data List insdide setState: $_answerDataList");
+        _currentQuestion = (value.isNotEmpty) ? _answerDataList[0].question : "";
       });
     });
-    print("Answer Data List: ${_answerDataList}");
+    //print("Answer Data List: ${_answerDataList}");
     setState(() {
       _isFetchingData = false;
     });
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    //_patientDataView = sampleAnswers[sampleAnswers.keys.first];
+    _updateState();
+    //print(widget.patientReference);
+    //_currentQuestion = _sampleAnswerData[_currentQuestionNumber].question;
+    super.initState();
   }
 
   @override
@@ -163,49 +234,64 @@ class _PatientDataViewState extends State<PatientDataView> {
 
     //print(sampleAnswers[_sampleAnswerData[0]]);
     //print(sampleAnswers[_sampleAnswerData[0]]);
-    print("Build executes");
+    //print("Build executes");
 
     return Scaffold(
       appBar: AppBar(title: const Text("View Patient Data"),),
       body: SafeArea(
-        child: (_answerDataList.isNotEmpty) ? Center(child: Column(
+        child: Center(child: Column(
       children: [
-        const SizedBox(height: 40,),
-        Text("Question ${_currentQuestionNumber+1}: \n$_currentQuestion",
-          style: TextStyle(fontSize: 22),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 15,),
-        SfCircularChart(
-          tooltipBehavior: TooltipBehavior(enable: true),
-          legend: const Legend(
-            isVisible: true,
-            position: LegendPosition.right,
-            overflowMode: LegendItemOverflowMode.wrap,
-          ),
-          series: <CircularSeries>[
-            PieSeries<AnswerValues, String>(
-              dataSource: _answerDataList[_currentQuestionNumber].answers,
-              xValueMapper: (AnswerValues answer, _) => AnswerMap[answer.answer],
-              yValueMapper: (AnswerValues answer, _) => answer.value,
-              // pointColorMapper: (AnswerValues answer, _) {
-              //   switch (AnswerMap[answer.answer]) {
-              //     case "Not at all" : return Color.fromARGB(255, 8, 22, 87);
-              //     case "Sometimes" : return Color.fromARGB(255, 77, 25, 27);
-              //     case "A lot" : return Color.fromARGB(255, 130, 14, 22);
-              //     case "Always" : return Color.fromARGB(255, 250, 128, 114);
-              //     default: return Colors.white;
-              //   }
-              // },
-              dataLabelSettings: const DataLabelSettings(
-                isVisible: true,
-                showZeroValue: false
-              ),
-              enableTooltip: true
-            )
-          ],
-        ),
         const SizedBox(height: 25,),
+        if (!_isFetchingData && _answerDataList.isNotEmpty)
+          Column(
+            children: [
+              Text("Question ${_currentQuestionNumber+1}: \n$_currentQuestion",
+                style: const TextStyle(fontSize: 22),
+                textAlign: TextAlign.center,
+              ),
+              //const SizedBox(height: 15,),
+              SfCircularChart(
+                tooltipBehavior: TooltipBehavior(enable: true),
+                legend: const Legend(
+                  isVisible: true,
+                  position: LegendPosition.right,
+                  overflowMode: LegendItemOverflowMode.wrap,
+                ),
+                series: <CircularSeries>[
+                  PieSeries<AnswerValues, String>(
+                      dataSource: _answerDataList[_currentQuestionNumber].answers,
+                      xValueMapper: (AnswerValues answer, _) => AnswerMap[answer.answer],
+                      yValueMapper: (AnswerValues answer, _) => answer.value,
+                      // pointColorMapper: (AnswerValues answer, _) {
+                      //   switch (AnswerMap[answer.answer]) {
+                      //     case "Not at all" : return Color.fromARGB(255, 8, 22, 87);
+                      //     case "Sometimes" : return Color.fromARGB(255, 77, 25, 27);
+                      //     case "A lot" : return Color.fromARGB(255, 130, 14, 22);
+                      //     case "Always" : return Color.fromARGB(255, 250, 128, 114);
+                      //     default: return Colors.white;
+                      //   }
+                      // },
+                      dataLabelSettings: const DataLabelSettings(
+                          isVisible: true,
+                          showZeroValue: false
+                      ),
+                      enableTooltip: true
+                  )
+                ],
+              )
+            ],
+          )
+        else if (_isFetchingData)
+          Center(child: CircularProgressIndicator(),)
+        else
+          Column(
+            children: [
+              SizedBox(height: 45,),
+              _noAnswersWidget,
+              SizedBox(height: 45,)
+            ],
+          ),
+        //const SizedBox(height: 25,),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -218,10 +304,72 @@ class _PatientDataViewState extends State<PatientDataView> {
               child: const Text("Next")
             )
           ],
-        )
+        ),
+        const SizedBox(height: 25,),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16),
+          child: Column(
+            children: [
+              DropdownButtonFormField(
+                decoration: const InputDecoration(
+                  label: Text("Select Time of Day"),
+                ),
+                items: _TimeOfDay.values.map((item) {
+                  return DropdownMenuItem(
+                      value: item,
+                      child: Text(item.name.capitalize())
+                  );
+                }).toList(),
+                onChanged: (value) {
+                 setState(() {
+                   _timeOfDay = value!;
+                 });
+                 _updateState();
+                }
+              ),
+              const SizedBox(height: 10,),
+              if (widget.parentOrTeacher == ParentOrTeacher.parent || widget.teacherCanViewParentReports)
+                DropdownButtonFormField(
+                  decoration: const InputDecoration(
+                    label: Text("Select Parent of Teacher")
+                  ),
+                  items: ["Parent", "Teacher", "All"].map((String item) {
+                    return DropdownMenuItem(
+                      child: Text(item),
+                      value: item,
+                    );
+                  }).toList(),
+                  onChanged: (item) {
+                    _selectedParentTeacherFilter = item!;
+                    _updateState();
+                  }
+                ),
+              const SizedBox(height: 10,),
+              DropdownButtonFormField(
+                decoration: const InputDecoration(
+                  label: Text("Select Date Range")
+                ),
+                items: _dateRangeMap.entries.map((entry) {
+                  return DropdownMenuItem(
+                    value: entry.value,
+                    child: Text(entry.key),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  //print(value);
+                  setState(() {
+                    _currentLookbackSelection = (value == null) ? _currentLookbackSelection : value;
+                  });
+                  _updateDateRange();
 
+                }
+              )
+            ]
+          ),
+        )
       ],
-      )) : (!_isFetchingData) ? Center(child: CircularProgressIndicator(),) : _noAnswersWidget
+      ))
+            //Is fetching data catch will need to go deeper in so that we can adjust search parameters.
     ));
   }
 }

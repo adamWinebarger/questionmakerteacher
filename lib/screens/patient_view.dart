@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:questionmakerteacher/models/answerer.dart';
 import 'package:questionmakerteacher/models/patient.dart';
@@ -20,6 +22,24 @@ class PatientView extends StatefulWidget {
 
 class _PatientViewState extends State<PatientView> {
 
+  late bool _parentCanViewTeacherReports = widget.currentPatient.teacherCanViewParentAnswers;
+
+  //So this will be the function where the current user is updated in the database,
+  //but since we made it so that that info is loaded into a Patient class and then we're
+  //getting that information here. Things are complicated a bit and we'll need to both
+  //update the variable, and update that locally as well. Will need to either
+  // update the variable at the class level, or otherwise test to make sure that
+  // changes made to the database get reflected at the end-user level.
+  Future<String?> _setWhetherTeachersCanViewParentReports(bool setVal) async {
+    await FirebaseFirestore.instance.collection('Patients')
+        .doc(widget.currentPatient.path).update({
+      'teacherCanViewParentAnswers' : setVal
+    }).catchError((error) {
+      return error;
+    }).then((value) {
+      return null;
+    });
+  }
 
   @override
   Widget build(context) {
@@ -41,7 +61,7 @@ class _PatientViewState extends State<PatientView> {
                 ),
               )
             ),
-            const SizedBox(height: 100,),
+            const SizedBox(height: 75,),
             // ElevatedButton(
             //   onPressed: () {},
             //   style: ElevatedButton.styleFrom(
@@ -55,7 +75,7 @@ class _PatientViewState extends State<PatientView> {
             ElevatedButton(
               onPressed: () {
                 Navigator.push(
-                    context, 
+                    context,
                     MaterialPageRoute(builder: (context) => QuestionnaireScreen(patientInQuestion: widget.currentPatient, parentOrTeacher:  widget.parentOrTeacher)
                     )
                 );
@@ -74,14 +94,26 @@ class _PatientViewState extends State<PatientView> {
               onPressed: () {
                 Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => PatientDataView(patientReference: currentPatientReferenceString))
+                    MaterialPageRoute(builder: (context) => PatientDataView(patientReference: currentPatientReferenceString,
+                      teacherCanViewParentReports: widget.currentPatient.teacherCanViewParentAnswers,
+                      parentOrTeacher: widget.parentOrTeacher
+                    ))
                 );
               },
               style: ElevatedButton.styleFrom(
                   side: BorderSide(width: 1, color: Theme.of(context).colorScheme.primary),
                   minimumSize: const Size(250, 40)
               ),
-              child: const Text("View questionnaire data")
+              child: const Text("View Reports")
+            ),
+            const SizedBox(height: 15,),
+            ElevatedButton(
+              onPressed: () {},
+              child: Text("View Questionnaires"),
+              style: ElevatedButton.styleFrom(
+                side: BorderSide(width: 1, color: Theme.of(context).colorScheme.primary),
+                minimumSize: const Size(250, 40)
+              ),
             ),
             const SizedBox(height: 15,),
             ElevatedButton(
@@ -94,6 +126,50 @@ class _PatientViewState extends State<PatientView> {
               ),
               child: const Text("Go Back")
             ),
+            const SizedBox(height: 45,),
+            //This will be our thing for parents that allows them to toggle whether teachers
+            // can view the parent reports or not.
+            if (widget.parentOrTeacher == ParentOrTeacher.parent)
+              DropdownButtonFormField(
+                isExpanded: true,
+                decoration: InputDecoration(
+                  label: const Text(
+                    "Would you like teachers to be able to view parent reports?",
+                    style: TextStyle(
+                      fontSize: 14
+                    ),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8)
+                  )
+                ),
+                items: [
+                  for (final selection in ["Yes", "No"])
+                    DropdownMenuItem(
+                      value: (selection == "Yes") ? true : false,
+                      child: Text(selection)
+                    )
+                ],
+                onChanged: (value) {
+                  _setWhetherTeachersCanViewParentReports(value!).then((value2) {
+                    if (value2 == null) {
+                      setState(() {
+                        _parentCanViewTeacherReports = value;
+                        print(_parentCanViewTeacherReports);
+                      });
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text("Error: $value2"),
+                          duration: const Duration(seconds: 2),
+                        )
+                      );
+                    }
+                  });
+                },
+                value: _parentCanViewTeacherReports,
+              )
           ],
         ),
       )

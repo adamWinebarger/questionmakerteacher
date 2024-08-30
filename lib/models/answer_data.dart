@@ -85,7 +85,7 @@ class AnswerData {
   }
 
   void add1(dynamic which) {
-    print("Which = $which");
+    //print("Which = $which");
     //answers.firstWhere((element) => element.answer.name == which.toString()).value++;
     for (final answer in answers) {
       if (answer.answer.name == which.toString()) {
