@@ -5,6 +5,7 @@ import 'package:questionmakerteacher/models/answerer.dart';
 import 'package:questionmakerteacher/models/patient.dart';
 import 'package:questionmakerteacher/screens/patient_dataview_screen.dart';
 import 'package:questionmakerteacher/screens/questionnaire_screen.dart';
+import 'package:questionmakerteacher/screens/view_reports_screen.dart';
 import 'package:questionmakerteacher/widgets/test_widgets.dart';
 
 class PatientView extends StatefulWidget {
@@ -89,7 +90,6 @@ class _PatientViewState extends State<PatientView> {
             const SizedBox(height: 15,),
             //This will be our data viz for answered questionnaires
             //... might merge this with the view questionnaires one
-            //This is the button for viewing questionnaire data
             ElevatedButton(
               onPressed: () {
                 Navigator.push(
@@ -104,16 +104,25 @@ class _PatientViewState extends State<PatientView> {
                   side: BorderSide(width: 1, color: Theme.of(context).colorScheme.primary),
                   minimumSize: const Size(250, 40)
               ),
-              child: const Text("View Reports")
+              child: const Text("View Questionnaire Data")
             ),
             const SizedBox(height: 15,),
+            //View Questionnaires button
             ElevatedButton(
-              onPressed: () {},
-              child: Text("View Questionnaires"),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => PatientReportsListScreen(
+                      currentPatientString: currentPatientReferenceString, parentOrTeacher: widget.parentOrTeacher,
+                      teacherCanViewParentReports: widget.currentPatient.teacherCanViewParentAnswers
+                  ))
+                );
+              },
               style: ElevatedButton.styleFrom(
                 side: BorderSide(width: 1, color: Theme.of(context).colorScheme.primary),
                 minimumSize: const Size(250, 40)
               ),
+              child: const Text("View Reports"),
             ),
             const SizedBox(height: 15,),
             ElevatedButton(

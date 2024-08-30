@@ -12,13 +12,6 @@ import 'package:questionmakerteacher/models/patient.dart';
 import '../models/answer_data.dart';
 import 'questionnaire_screen.dart';
 
-Map<String, Answers> _answerSelection = {
-  "notAtAll" : Answers.notAtAll,
-  "sometimes" : Answers.sometimes,
-  "aLot" : Answers.alot,
-  "always" : Answers.always
-};
-
 enum _TimeOfDay {
   morning,
   afternoon,
@@ -56,8 +49,8 @@ class _PatientDataViewState extends State<PatientDataView> {
 
   //variables that will determine what widget to display based on whether the app is fetching data.
   //whether it's found it, and should also probably handle what happens if and when it does find data
-  bool _isFetchingData = false, _fetchedData = false;
-  int _currentQuestionNumber = 0, _dayRange = 7;
+  bool _isFetchingData = false;
+  int _currentQuestionNumber = 0;
   _TimeOfDay _timeOfDay = _TimeOfDay.all;
   String _selectedParentTeacherFilter = "All";
   _Lookback _currentLookbackSelection = _Lookback.today;
