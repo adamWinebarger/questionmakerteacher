@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:questionmakerteacher/models/questionnaire.dart';
 import 'answerer.dart';
 
@@ -20,11 +21,14 @@ class Report {
       Report(
           firstName: json['answererFirstName'],
           lastName: json['answererLastName'],
-          timestamp: json['Timestamp'] as DateTime,
-          timeOfDay: json['timeOfDay'],
-          parentOrTeacher: json['parentOrTeacher'].values.firstWhere((element) =>
+          timestamp: (json['Timestamp'] as Timestamp).toDate(),
+          timeOfDay: json['timeOfDay'].toString(),
+          parentOrTeacher: ParentOrTeacher.values.firstWhere((element) =>
           element.name == json['parentOrTeacher']),
-          answers: (json['answers'] as Map<String, Answers>).map((key, value) =>
-              MapEntry(key, value))
+          answers: (json['Answers'] as Map<String, dynamic>).map((key, value) =>
+              MapEntry(key, Answers.values.firstWhere((element) =>
+                element.name == value.toString(),
+                orElse: () => Answers.notAtAll
+              )))
       );
 }

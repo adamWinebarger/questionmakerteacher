@@ -7,8 +7,17 @@ import 'package:questionmakerteacher/models/report.dart';
 
 import 'package:questionmakerteacher/models/patient.dart';
 import 'package:questionmakerteacher/models/questionnaire.dart';
+import 'package:questionmakerteacher/screens/patient_report_screen.dart';
+import 'package:questionmakerteacher/stringextension.dart';
 
 final _authenticatedUser = FirebaseAuth.instance.currentUser!;
+
+enum _TimeOfDay {
+  morning,
+  afternoon,
+  evening,
+  all
+}
 
 class PatientReportsListScreen extends StatefulWidget {
   const PatientReportsListScreen({super.key, required this.currentPatientString,
@@ -30,15 +39,16 @@ class _PatientReportsListScreenState extends State<PatientReportsListScreen> {
   );
 
   bool _isFetchingData = false;
-  List<String> _reportsList = [];
+  List<Report> _reportsList = [];
   DateTime _toDate = DateTime.now(), _fromDate = DateTime.now().subtract(const Duration(days: 7));
   //DateTime _toDate = DateTime.now(), _fromDate = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
 
   String _selectedParentTeacherFilter = "All";
+  _TimeOfDay _selectedTimeOfDay = _TimeOfDay.all;
 
 
-  Future<List<String>> _getReportListFromDatabase() async {
-    List<String> reportsList = [];
+  Future<List<Report>> _getReportListFromDatabase() async {
+    List<Report> reportsList = [];
 
     final CollectionReference crList = FirebaseFirestore.instance.collection("Patients")
       .doc(widget.currentPatientString).collection("Answers");
@@ -57,8 +67,10 @@ class _PatientReportsListScreenState extends State<PatientReportsListScreen> {
     * the regular background.
     */
 
-    Query reportQuery = crList.where("TimeStamp", isGreaterThanOrEqualTo: _fromDate)
-      .where("TimeStamp", isLessThanOrEqualTo: _toDate);
+    //Should we do out Lookback thing up here as well? We'll come back to that
+    Query reportQuery = crList.where("Timestamp", isGreaterThanOrEqualTo: _fromDate)
+      .where("Timestamp", isLessThanOrEqualTo: _toDate)
+      .orderBy("Timestamp", descending: true);
 
     if (widget.parentOrTeacher == ParentOrTeacher.teacher && widget.teacherCanViewParentReports == false) {
       reportQuery = reportQuery.where("parentOrTeacher", isEqualTo: "teacher");
@@ -66,12 +78,45 @@ class _PatientReportsListScreenState extends State<PatientReportsListScreen> {
       reportQuery = reportQuery.where("parentOrTeacher", isEqualTo: (_selectedParentTeacherFilter == "Parent") ? "parent" : "teacher");
     }
 
+    if (_selectedTimeOfDay != _TimeOfDay.all) {
+      reportQuery = reportQuery.where("timeOfDay", isEqualTo: _selectedTimeOfDay.name);
+    }
+
+    final QuerySnapshot reportQuerySnapshot = await reportQuery.get();
+    print("Made it to here");
+
+    for (var docSnapshot in reportQuerySnapshot.docs) {
+      Map<String, dynamic> documentFields = docSnapshot.data() as Map<String, dynamic>;
+
+      Report report = Report.fromJSON(documentFields);
+      print(report);
+      reportsList.add(report);
+    }
+
+    //So now we need to retrieve the Documents from our Query and then
+
     return reportsList;
+  }
+
+  void _updateState() {
+    setState(() {
+      _isFetchingData = true;
+    });
+
+    _getReportListFromDatabase().then((value) {
+      setState(() {
+        _reportsList = value;
+      });
+    });
+    setState(() {
+      _isFetchingData = false;
+    });
   }
 
   @override
   void initState() {
     // TODO: implement initState
+    _updateState();
     super.initState();
   }
 
@@ -81,17 +126,43 @@ class _PatientReportsListScreenState extends State<PatientReportsListScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text("View Reports"),),
       body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+        padding: EdgeInsets.symmetric(horizontal: 15, vertical: 35),
         child: Center(
           child: Column(
             children: [
-              SizedBox(height: 25,),
-              Text("Text",
-                style: TextStyle(
-                  fontSize: 22,
-                ),
-                textAlign: TextAlign.center,
-              )
+              Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.blueGrey, width: 2),
+                      borderRadius: BorderRadius.circular(10)
+                    ),
+                    child: ListView.builder(
+                        itemCount: _reportsList.length,
+                        itemBuilder: (context, index) {
+                          final selectedReport = _reportsList[index];
+
+                          return Container(
+                            decoration: const BoxDecoration(
+                              border:Border(
+                                bottom: BorderSide(color: Colors.blueGrey, width: 1)
+                              )
+                            ),
+                            child: ListTile(
+                              title: Text("${selectedReport.lastName}, ${selectedReport.firstName} (${selectedReport.parentOrTeacher.name.capitalize()})"),
+                              subtitle: Text("${selectedReport.timeOfDay.capitalize()} - ${selectedReport.timestamp}"),
+                              onTap: () {
+                                Navigator.push(
+                                  context, 
+                                  MaterialPageRoute(builder: (context) => PatientReportScreen(currentReport: selectedReport))
+                                );
+                              },
+                            ),
+                          );
+                        }
+                    ),
+                  )
+              ),
+
             ],
           ),
         )
