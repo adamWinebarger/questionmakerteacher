@@ -68,7 +68,7 @@ class _PatientReportsListScreenState extends State<PatientReportsListScreen> {
     */
 
     //Should we do out Lookback thing up here as well? We'll come back to that
-    Query reportQuery = crList.where("Timestamp", isGreaterThanOrEqualTo: _fromDate)
+    Query reportQuery = crList//.where("Timestamp", isGreaterThanOrEqualTo: _fromDate)
       .where("Timestamp", isLessThanOrEqualTo: _toDate)
       .orderBy("Timestamp", descending: true);
 

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:questionmakerteacher/models/answerer.dart';
 import 'package:questionmakerteacher/models/questionnaire.dart';
 import 'package:questionmakerteacher/stringextension.dart';
+import 'package:questionmakerteacher/widgets/date_picker.dart';
 import 'package:questionmakerteacher/widgets/test_widgets.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:questionmakerteacher/data/patient_test_data.dart';
@@ -231,18 +232,20 @@ class _PatientDataViewState extends State<PatientDataView> {
 
     return Scaffold(
       appBar: AppBar(title: const Text("View Patient Data"),),
-      body: SafeArea(
+      body: SingleChildScrollView(
         child: Center(child: Column(
-      children: [
-        const SizedBox(height: 25,),
+        children: [
+        const SizedBox(height: 15,),
         if (!_isFetchingData && _answerDataList.isNotEmpty)
           Column(
             children: [
-              Text("Question ${_currentQuestionNumber+1}: \n$_currentQuestion",
-                style: const TextStyle(fontSize: 22),
-                textAlign: TextAlign.center,
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 5),
+                child: Text("Question ${_currentQuestionNumber+1}: \n$_currentQuestion",
+                  style: const TextStyle(fontSize: 22),
+                  textAlign: TextAlign.center,
+                ),
               ),
-              //const SizedBox(height: 15,),
               SfCircularChart(
                 tooltipBehavior: TooltipBehavior(enable: true),
                 legend: const Legend(
@@ -356,7 +359,35 @@ class _PatientDataViewState extends State<PatientDataView> {
                   _updateDateRange();
 
                 }
-              )
+              ),
+              SizedBox(height: 10,),
+              if (_currentLookbackSelection == _Lookback.specificTimeframe)
+                Row(
+                  children: [
+                    //From and To Date Pickers will need to go here
+                    Flexible(child: DatePicker(
+                        initialValue: _fromDate,
+                        onchanged: (value) {
+                          print("Made it to here. value: $value");
+                          setState(() {
+                            _fromDate = value;
+                          });
+                          _updateState();
+                        },
+                        labelText: "From:"
+                    )),
+                    Flexible(child: DatePicker(
+                      initialValue: _toDate,
+                      onchanged: (value) {
+                        setState(() {
+                          _toDate = value;
+                        });
+                        _updateState();
+                      },
+                      labelText: "To:"
+                    ))
+                  ],
+                )
             ]
           ),
         )

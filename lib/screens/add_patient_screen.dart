@@ -27,6 +27,7 @@ class _AddPatientState extends State<AddPatientScreen> {
     String? errorMessage;
     QueryDocumentSnapshot<Object?>? foundPatient;
     String? whoIsViewable;
+    print("This fires");
 
     //So the lazy logic here is to essentially to break out codes into a parent and teacher code
     // Since I didn't want to go back and re-write a whole bunch of stuff. This is essentially going
@@ -34,7 +35,7 @@ class _AddPatientState extends State<AddPatientScreen> {
     if (_parentOrTeacher != ParentOrTeacher.teacher) {
       //This is essentially the parent case
       await _crList.where('lastName', isEqualTo: _enteredLastName)
-          .where('childCode', isEqualTo: _enteredPatientCode).get().then(
+          .where('parentCode', isEqualTo: _enteredPatientCode).get().then(
               (value) {
             //this basically checks to see if there's any data that matches the query, then, if so,
             // follows different paths based on how much data is returned.
@@ -86,9 +87,10 @@ class _AddPatientState extends State<AddPatientScreen> {
   //it.
   //UPDATE: This has been changed dramatically.
   Future<List<String>> _getPatientList() async {
+    print("Banana");
     final currentUserData = await widget.currentUser.get();
-    var viewableStudents = (currentUserData['viewableStudents'] as List)?.map((e) => e as String)?.toList();
-    var viewableChildren = (currentUserData['viewableChildren'] as List)?.map((e) => e as String)?.toList();
+    var viewableStudents = (currentUserData['viewableStudents'] as List).map((e) => e as String).toList();
+    var viewableChildren = (currentUserData['viewableChildren'] as List).map((e) => e as String).toList();
     List<String> patientList = (viewableStudents != null && viewableStudents.isNotEmpty) ? viewableStudents : [];
     if (viewableChildren != null && viewableChildren.isNotEmpty) {
       patientList += viewableChildren;
@@ -124,11 +126,11 @@ class _AddPatientState extends State<AddPatientScreen> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    _getPatientList().then((value) {
-      setState(() {
-        _patientList = value;
-      });
-    });
+    // _getPatientList().then((value) {
+    //   setState(() {
+    //     _patientList = value;
+    //   });
+    // });
   }
 
   @override
