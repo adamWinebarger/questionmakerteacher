@@ -32,7 +32,7 @@ class PatientReportScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text("Report Viewer"),),
       body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 15, vertical: 25),
+        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 25),
         child: Center(
           child: Column(
             children: [

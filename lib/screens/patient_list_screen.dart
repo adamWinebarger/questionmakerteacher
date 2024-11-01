@@ -12,7 +12,9 @@ import '../models/patient.dart';
 final _authenticatedUser = FirebaseAuth.instance.currentUser!;
 
 class PatientListScreen extends StatefulWidget {
-  const PatientListScreen({super.key});
+  const PatientListScreen({super.key, required this.isAdmin});
+
+  final bool isAdmin;
   
   @override
   State<StatefulWidget> createState() {
@@ -53,6 +55,28 @@ class _PatientListScreenState extends State<PatientListScreen> {
     return [...viewableChildren, ...viewableStudents];
   }
 
+  /* So this is the event that should fire in the event that we're viewing this in admin mode.
+  * So instead of looking at the viewable children or viewable students, we need to essentially run
+  * a query for any patients that have an administratorCode set to the UUID of the current admin user*/
+  Future<List<String>> _getApprovedAdminPatients() async {
+    final currentUserDoc = _currentUserDoc.get();
+    List<String> viewablePatients = [];
+
+    final QuerySnapshot createdPatientsQuery = await FirebaseFirestore.instance.collection("Patients")
+      .where("AdministratorCode", isEqualTo: _authenticatedUser.uid).get();
+
+    for (var docSnapshot in createdPatientsQuery.docs) {
+      Map<String, dynamic> docData = docSnapshot.data() as Map<String, dynamic>;
+
+      final firstName = docData['firstName'], lastName = docData['lastName'],
+        patientCode = docData['patientCode'];
+
+      final patientPath = "$lastName, $firstName ($patientCode)";
+      viewablePatients.add(patientPath);
+    }
+    return viewablePatients;
+  }
+
   void _go2PatientView2(QueryDocumentSnapshot selectedPatient) {
     Patient patient = Patient.fromJson(selectedPatient.data() as Map<String, dynamic>);
     print(selectedPatient.id);
@@ -62,7 +86,8 @@ class _PatientListScreenState extends State<PatientListScreen> {
     //print(patient.path);
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => PatientView(currentPatient: patient, parentOrTeacher: parentOrTeacher))
+      MaterialPageRoute(builder: (context) =>
+          PatientView(currentPatient: patient, parentOrTeacher: parentOrTeacher, isAdmin: widget.isAdmin,))
     );
   }
 
@@ -92,12 +117,21 @@ class _PatientListScreenState extends State<PatientListScreen> {
   void initState() {
     super.initState();
     _setupPushNotifs();
-    _getApprovedPatients().then((value) {
-      setState(() {
-        _patientList = value;
-        _isFetchingData = false;
+    if (widget.isAdmin) {
+      _getApprovedAdminPatients().then((value) {
+        setState(() {
+          _patientList = value;
+          _isFetchingData = false;
+        });
       });
-    });
+    } else {
+      _getApprovedPatients().then((value) {
+        setState(() {
+          _patientList = value;
+          _isFetchingData = false;
+        });
+      });
+    }
   }
 
   @override
@@ -106,7 +140,7 @@ class _PatientListScreenState extends State<PatientListScreen> {
     //print("build $_patientList");
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Patient Select"),
+        title: widget.isAdmin ? const Text("Patient Select (Admin)") : const Text("Patient Select"),
         leading: IconButton( //this can be our logout button, I guess
           onPressed: _logoutButtonPressed,
           icon: const Icon(Icons.logout),
@@ -142,16 +176,23 @@ class _PatientListScreenState extends State<PatientListScreen> {
                     return ListView.builder(
                       itemCount: snapshot.data!.docs.length,
                       itemBuilder: (context, index) {
-                        return ListTile(
-                          title: Text(
-                            snapshot.data!.docs[index].id,
-                            style: const TextStyle(
-                                overflow: TextOverflow.ellipsis),
+                        return Container(
+                          decoration: const BoxDecoration(
+                            border: Border(
+                              bottom: BorderSide( color: Colors.blueGrey, width: 1)
+                            )
                           ),
-                          onTap: () {
-                            //print(snapshot.data!.docs[index].data());
-                            _go2PatientView2(snapshot.data!.docs[index]);
-                          },
+                          child: ListTile(
+                            title: Text(
+                              snapshot.data!.docs[index].id,
+                              style: const TextStyle(
+                                  overflow: TextOverflow.ellipsis),
+                            ),
+                            onTap: () {
+                              //print(snapshot.data!.docs[index].data());
+                              _go2PatientView2(snapshot.data!.docs[index]);
+                            },
+                          ),
                         );
                       },
                     );

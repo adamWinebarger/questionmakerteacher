@@ -25,8 +25,9 @@ class _AuthScreenState extends State<AuthScreen> {
   final _formKey = GlobalKey<FormState>();
   final _passwordController = TextEditingController();
 
-  var _isLogin = false, _passwordFieldSelected = false, _isAuthenticating = false;
-  var _enteredEmail = '', _enteredPassword = '', _enteredLastName = '',
+  bool _isLogin = true, _passwordFieldSelected = false, _isAuthenticating = false,
+    _isAdminLogin = false;
+  String _enteredEmail = '', _enteredPassword = '', _enteredLastName = '',
     _enteredFirstName = '';
   var _sfSymbolSize = 75.0;
 
@@ -35,7 +36,7 @@ class _AuthScreenState extends State<AuthScreen> {
       _isAuthenticating = true;
     });
 
-    //So this ios
+    //So this ios...?
     final isValid = _formKey.currentState!.validate();
 
     if (!isValid) {
@@ -52,8 +53,24 @@ class _AuthScreenState extends State<AuthScreen> {
       //might move the authenticating indicator into this try block...
 
       if (_isLogin) {
+        /*So here, we need to implement our first check as to whether the person logging in
+        * has an adminID associated with their email. In the event that that's true
+        * then we're going to want to give the user a little yes/no window prompt that
+        * asks whether they're trying to log into their therapist account.
+        *
+        * If they are, then all we need to do is set an _isAdmin boolean and then
+        * that will give them different privileges within the application than their
+        * normal account
+        *
+        * Edit: That check was moved to main since we don't actually push from here.
+        * Given the sort of... pain in the ass that was being caused by trying to get the
+        * alert to manifest from here, it's actually going to be easier up in main anyways
+        */
+        //print("In the start of isLogin");
+
         final userCreds = await _firebaseAuth.signInWithEmailAndPassword(
             email: _enteredEmail, password: _enteredPassword);
+
       } else {
         final userCreds = await _firebaseAuth.createUserWithEmailAndPassword(
             email: _enteredEmail, password: _enteredPassword);
@@ -77,6 +94,7 @@ class _AuthScreenState extends State<AuthScreen> {
               content: Text(error.message ?? "Authentication Failed")
           )
       );
+
       setState(() {
         _isAuthenticating = false;
       });
@@ -268,36 +286,36 @@ class _AuthScreenState extends State<AuthScreen> {
                           //  
                           //   onPressed: () {}
                           // ),
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Theme.of(context).colorScheme.background,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(100),
-                              ),
-                              side: BorderSide(width: 1, color: Theme.of(context).colorScheme.primary),
-                              //textStyle: TextStyle(color: Theme.of(context).primaryColor),
-                              minimumSize: const Size(200, 40)
-                            ),
-                            onPressed: () {}, 
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Container(
-                                  width: 25,
-                                  height: 25,
-                                  child: const Image(image: AssetImage('assets/images/google_circle.png'), height: 24, width: 24,),
-                                ),
-                                const SizedBox(width: 10,),
-                                Text(
-                                  "Sign in With Google",
-                                  style: TextStyle(
-                                    color: Theme.of(context).colorScheme.primary,
-                                  )
-                                )
-                              ],
-                            )
-                          ),
+                          // ElevatedButton(
+                          //   style: ElevatedButton.styleFrom(
+                          //     backgroundColor: Theme.of(context).colorScheme.background,
+                          //     shape: RoundedRectangleBorder(
+                          //       borderRadius: BorderRadius.circular(100),
+                          //     ),
+                          //     side: BorderSide(width: 1, color: Theme.of(context).colorScheme.primary),
+                          //     //textStyle: TextStyle(color: Theme.of(context).primaryColor),
+                          //     minimumSize: const Size(200, 40)
+                          //   ),
+                          //   onPressed: () {},
+                          //   child: Row(
+                          //     mainAxisSize: MainAxisSize.min,
+                          //     mainAxisAlignment: MainAxisAlignment.center,
+                          //     children: [
+                          //       Container(
+                          //         width: 25,
+                          //         height: 25,
+                          //         child: const Image(image: AssetImage('assets/images/google_circle.png'), height: 24, width: 24,),
+                          //       ),
+                          //       const SizedBox(width: 10,),
+                          //       Text(
+                          //         "Sign in With Google",
+                          //         style: TextStyle(
+                          //           color: Theme.of(context).colorScheme.primary,
+                          //         )
+                          //       )
+                          //     ],
+                          //   )
+                          // ),
                           if (!_isAuthenticating)
                             TextButton(
                               onPressed: () {

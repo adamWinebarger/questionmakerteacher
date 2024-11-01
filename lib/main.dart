@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -20,7 +21,7 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'questionmaker teacher',
+      title: 'Dr. Al\'s SHIFT',
       theme: ThemeData.light().copyWith(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
@@ -51,13 +52,84 @@ class App extends StatelessWidget {
             }
 
             if (dataSnapshot.hasData) {
-              return PatientListScreen();
+              /* Okay, so it looks like since we're listening for changes to
+              * datasnapshot up here so there's no real reason to do the admin check
+              * down at auth. Instead, we need to do the check up here, for a doc
+              * with the current user UID, check within to see if there's an adminID,
+              * and then prompt the user up here... I guess*/
+
+              return FutureBuilder<DocumentSnapshot>(
+                future: FirebaseFirestore.instance.collection('users').doc(dataSnapshot.data!.uid).get(),
+                builder: (context, userSnapshot) {
+                  if (userSnapshot.connectionState == ConnectionState.waiting) {
+                    return const SplashScreen();
+                  }
+
+                  if (userSnapshot.hasData) {
+                    final userData = userSnapshot.data!.data() as Map<String, dynamic>?;
+
+                    //check if adminID exists within this doc
+                    if (userData != null && userData.containsKey('adminID')) {
+
+                      return const PatientListScreen(isAdmin: true);
+                    }
+
+                    //case for when we don't find an adminID
+                    return const PatientListScreen(isAdmin: false);
+                  } else {
+                    return const AuthScreen();
+                  }
+                },
+              );
+              //return const PatientListScreen(isAdmin: false,);
             } else {
               return const AuthScreen();
             }
           }
         ),
       )
+    );
+  }
+
+  FutureBuilder<void> _showAdminDialog(BuildContext context, DocumentSnapshot userDoc) {
+    return FutureBuilder<void>(
+      future: showDialog<bool>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text("Admin Account Found"),
+            content: const Text("It appears there is a therapist/administrative account associated with this email. "
+                "Would you like to log in to your admin account?"),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text("Yes")
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: Text("No")
+              )
+            ],
+          );
+        }
+      ).then((isAdmin) {
+        if (isAdmin == true) {
+          //Pushing to PatientScreen in Admin Mode
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const PatientListScreen(isAdmin: true))
+          );
+        } else {
+          //Regular PatientListScreen
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const PatientListScreen(isAdmin: false))
+          );
+        }
+      }),
+      builder: (context, snapshot) {
+        return const SplashScreen();
+      },
     );
   }
 }

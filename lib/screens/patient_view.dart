@@ -9,10 +9,12 @@ import 'package:questionmakerteacher/screens/view_reports_screen.dart';
 import 'package:questionmakerteacher/widgets/test_widgets.dart';
 
 class PatientView extends StatefulWidget {
-  const PatientView({super.key, required this.currentPatient, required this.parentOrTeacher});
+  const PatientView({super.key, required this.currentPatient, required this.parentOrTeacher,
+    required this.isAdmin});
 
   final Patient currentPatient;
   final ParentOrTeacher parentOrTeacher;
+  final bool isAdmin;
 
   @override
   State<StatefulWidget> createState() {
@@ -49,7 +51,7 @@ class _PatientViewState extends State<PatientView> {
     return Scaffold(
       appBar: AppBar(title: Text("${widget.currentPatient.lastName}, ${widget.currentPatient.firstName}"),),
       body: SingleChildScrollView(
-        padding: EdgeInsets.only(top: 100, left: 24, right: 24),
+        padding: const EdgeInsets.only(top: 100, left: 24, right: 24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -73,20 +75,21 @@ class _PatientViewState extends State<PatientView> {
             // ),
             // const SizedBox(height: 15,),
             //This is the button for new questionnaires
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => QuestionnaireScreen(patientInQuestion: widget.currentPatient, parentOrTeacher:  widget.parentOrTeacher)
-                    )
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                side: BorderSide(width: 1, color: Theme.of(context).colorScheme.primary),
-                minimumSize: const Size(250, 40)
+            if (!widget.isAdmin)
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => QuestionnaireScreen(patientInQuestion: widget.currentPatient, parentOrTeacher:  widget.parentOrTeacher)
+                      )
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  side: BorderSide(width: 1, color: Theme.of(context).colorScheme.primary),
+                  minimumSize: const Size(250, 40)
+                ),
+                child: Text("Rate ${widget.currentPatient.firstName}")
               ),
-              child: const Text("Answer new questionnaire")
-            ),
             const SizedBox(height: 15,),
             //This will be our data viz for answered questionnaires
             //... might merge this with the view questionnaires one
@@ -96,7 +99,8 @@ class _PatientViewState extends State<PatientView> {
                     context,
                     MaterialPageRoute(builder: (context) => PatientDataView(patientReference: currentPatientReferenceString,
                       teacherCanViewParentReports: widget.currentPatient.teacherCanViewParentAnswers,
-                      parentOrTeacher: widget.parentOrTeacher
+                      parentOrTeacher: widget.parentOrTeacher,
+                      patientFirstName: widget.currentPatient.firstName,
                     ))
                 );
               },
@@ -104,7 +108,7 @@ class _PatientViewState extends State<PatientView> {
                   side: BorderSide(width: 1, color: Theme.of(context).colorScheme.primary),
                   minimumSize: const Size(250, 40)
               ),
-              child: const Text("View Questionnaire Data")
+              child: Text("${widget.currentPatient.firstName}'s Report Summary")
             ),
             const SizedBox(height: 15,),
             //View Questionnaires button
@@ -122,7 +126,7 @@ class _PatientViewState extends State<PatientView> {
                 side: BorderSide(width: 1, color: Theme.of(context).colorScheme.primary),
                 minimumSize: const Size(250, 40)
               ),
-              child: const Text("View Reports"),
+              child: const Text("View Past Reports"),
             ),
             const SizedBox(height: 15,),
             ElevatedButton(
@@ -138,7 +142,7 @@ class _PatientViewState extends State<PatientView> {
             const SizedBox(height: 45,),
             //This will be our thing for parents that allows them to toggle whether teachers
             // can view the parent reports or not.
-            if (widget.parentOrTeacher == ParentOrTeacher.parent)
+            if (widget.parentOrTeacher == ParentOrTeacher.parent && !widget.isAdmin)
               DropdownButtonFormField(
                 isExpanded: true,
                 decoration: InputDecoration(

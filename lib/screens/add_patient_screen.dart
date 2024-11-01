@@ -50,9 +50,11 @@ class _AddPatientState extends State<AddPatientScreen> {
             }
           });
     }
+    print('Error message: $errorMessage');
+    print('Found patient: $foundPatient');
     //Since we're exiting the parent block, it's just going to skip this entirely
     //if it found a hit here.
-    if (_parentOrTeacher != ParentOrTeacher.parent && errorMessage != null) {
+    if (_parentOrTeacher != ParentOrTeacher.parent && foundPatient == null) {
       //which makes this the teacher case.
       await _crList.where('lastName', isEqualTo: _enteredLastName)
           .where('teacherCode', isEqualTo: _enteredPatientCode).get().then(
@@ -74,7 +76,6 @@ class _AddPatientState extends State<AddPatientScreen> {
     //there should be no instance where the error message and the found patient are both null
     //so we'll add a new patient to the array when the error message is null
     if (errorMessage == null) {
-
       await widget.currentUser.update({
         whoIsViewable! : FieldValue.arrayUnion([foundPatient!.id])
       });
@@ -139,7 +140,7 @@ class _AddPatientState extends State<AddPatientScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Add Patient"),
+        title: const Text("Add Child"),
       ),
       body: Padding(
         padding: EdgeInsets.all(25),
@@ -165,7 +166,8 @@ class _AddPatientState extends State<AddPatientScreen> {
                 TextFormField(
                   decoration: const InputDecoration(labelText: "Code:"),
                   validator: (value) {
-                    if (value == null || value.trim().isEmpty || value.trim().length != 40) {
+                    if (value == null || value.trim().isEmpty) {
+                      //This will definitely need to be built out.
                       return "Invalid Patient Code Detected";
                     }
                     return null;

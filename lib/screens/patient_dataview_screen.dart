@@ -30,9 +30,10 @@ enum _Lookback {
 
 class PatientDataView extends StatefulWidget {
   const PatientDataView({super.key, required this.patientReference,
-    required this.teacherCanViewParentReports, required this.parentOrTeacher});
+    required this.teacherCanViewParentReports, required this.parentOrTeacher,
+    required this.patientFirstName});
 
-  final String patientReference;
+  final String patientReference, patientFirstName;
   final bool teacherCanViewParentReports;
   final ParentOrTeacher parentOrTeacher;
 
@@ -91,7 +92,7 @@ class _PatientDataViewState extends State<PatientDataView> {
     }
   }
 
-  //Async method for grabbing the Answers from the firebase database
+  //A method for grabbing the Answers from the firebase database
   //Async method for grabbing the Answers from the firebase database
   Future<List<AnswerData>> _getAnswerDocumentsFromDatabase() async {
     //So what we need is the Answers Documents that are within the from date and the to date.
@@ -111,15 +112,16 @@ class _PatientDataViewState extends State<PatientDataView> {
       requisiteAnswersQuery = requisiteAnswersQuery.where("Timestamp", isGreaterThanOrEqualTo: _fromDate);
     }
 
+    if (_timeOfDay != _TimeOfDay.all) {
+      //print(_timeOfDay.name);
+      requisiteAnswersQuery = requisiteAnswersQuery.where("timeOfDay", isEqualTo: _timeOfDay.name.toLowerCase());
+    }
+
     if (widget.parentOrTeacher == ParentOrTeacher.teacher && widget.teacherCanViewParentReports == false) {
       requisiteAnswersQuery = requisiteAnswersQuery.where("parentOrTeacher", isEqualTo: "teacher");
     } else if (_selectedParentTeacherFilter != "All") {
       requisiteAnswersQuery = requisiteAnswersQuery
           .where("parentOrTeacher", isEqualTo: (_selectedParentTeacherFilter == "Parent") ? "parent" : "teacher");
-    }
-
-    if (_timeOfDay != _TimeOfDay.all) {
-      requisiteAnswersQuery = requisiteAnswersQuery.where("timeOfDay", isEqualTo: _timeOfDay.name);
     }
 
     try {
@@ -154,7 +156,7 @@ class _PatientDataViewState extends State<PatientDataView> {
         }
       }
     } catch (e) {
-      //print(e);
+      print(e);
       return [];
     }
     //print("AVList: $avList");
@@ -231,7 +233,7 @@ class _PatientDataViewState extends State<PatientDataView> {
     //print("Build executes");
 
     return Scaffold(
-      appBar: AppBar(title: const Text("View Patient Data"),),
+      appBar: AppBar(title: Text("${widget.patientFirstName}'s Report Summary"),),
       body: SingleChildScrollView(
         child: Center(child: Column(
         children: [

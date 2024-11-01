@@ -61,14 +61,19 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
 
   void _nextPressed() {
     //print(_selectedAnswer);
+    final selectedQuestionsList = widget.parentOrTeacher == ParentOrTeacher.parent ?
+        widget.patientInQuestion.parentQuestions : widget.patientInQuestion.teacherQuestions;
+
+    //print("Made it to here 1");
     if (_selectedAnswer != null) {
       _answers.add(_selectedAnswer!);
-      if (_count < widget.patientInQuestion.teacherQuestions.length - 1) {
+      if (_count < selectedQuestionsList.length - 1) {
         setState(() {
           ++_count;
           _selectedAnswer = null;
         });
       } else {
+        print("Made it to here 2");
         _submitQuestionnaire();
       }
     }
@@ -87,9 +92,13 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
   }
 
   void _submitQuestionnaire() async {
+    final selectedQuestionsList = widget.parentOrTeacher == ParentOrTeacher.parent ?
+    widget.patientInQuestion.parentQuestions : widget.patientInQuestion.teacherQuestions;
+    print("Made it to here 3");
 
-    for (int i = 0; i < widget.patientInQuestion.teacherQuestions.length; i++) {
-      _answerMap[widget.patientInQuestion.teacherQuestions[i]] = _answers[i].name;
+
+    for (int i = 0; i < selectedQuestionsList.length; i++) {
+      _answerMap[selectedQuestionsList[i]] = _answers[i].name;
     }
 
     //print(_currentAnswerer.parentOrTeacher);
@@ -141,8 +150,8 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
       appBar: AppBar(
         title: const Text("Answer Screen"),
       ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 24),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
         child: Form(
           key: _formKey,
           child: Column(
