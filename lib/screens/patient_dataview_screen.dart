@@ -206,7 +206,7 @@ class _PatientDataViewState extends State<PatientDataView> {
         _answerDataList = value;
         //print(_answerDataList);
         //print("Answer Data List insdide setState: $_answerDataList");
-        _currentQuestion = (value.isNotEmpty) ? _answerDataList[0].question : "";
+        _currentQuestion = (value.isNotEmpty) ? _answerDataList[_currentQuestionNumber].question : "";
       });
     });
     //print("Answer Data List: ${_answerDataList}");
@@ -255,6 +255,7 @@ class _PatientDataViewState extends State<PatientDataView> {
                   position: LegendPosition.right,
                   overflowMode: LegendItemOverflowMode.wrap,
                 ),
+                palette: <Color>[Colors.deepOrange.shade600, Colors.yellow.shade600, Colors.green, Colors.lightBlueAccent],
                 series: <CircularSeries>[
                   PieSeries<AnswerValues, String>(
                       dataSource: _answerDataList[_currentQuestionNumber].answers,
@@ -298,7 +299,7 @@ class _PatientDataViewState extends State<PatientDataView> {
               child: const Text("Back")),
             SizedBox(width: 15,),
             ElevatedButton(
-              onPressed: (_currentQuestionNumber < _sampleAnswerData.length - 1) ? _nextPressed : (){},
+              onPressed: (_currentQuestionNumber < _answerDataList.length - 1) ? _nextPressed : (){},
               child: const Text("Next")
             )
           ],

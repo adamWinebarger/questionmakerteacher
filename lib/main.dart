@@ -25,21 +25,22 @@ class App extends StatelessWidget {
       theme: ThemeData.light().copyWith(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.deepPurple,
+          seedColor: Color(0xff66BB6A),
           brightness: Brightness.light,
-          surface: const Color(0xff8f8f8f),
+          surface: Color(0xff66BB6A),
         ),
-        scaffoldBackgroundColor: const Color(0xffbabab8),
+        scaffoldBackgroundColor: Color(0xff388e3c)//const Color(0xff8f8f8f),
       ),
-      darkTheme: ThemeData.dark().copyWith(
-          useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(
-              seedColor: Colors.deepPurple,
-              brightness: Brightness.dark,
-              surface: const Color.fromARGB(255, 42, 51, 59)
-          ),
-          scaffoldBackgroundColor: const Color.fromARGB(255, 50, 58, 60)
-      ),
+      // darkTheme: ThemeData.dark().copyWith(
+      //     useMaterial3: true,
+      //     colorScheme: ColorScheme.fromSeed(
+      //         seedColor: Colors.deepPurple.shade400,
+      //         brightness: Brightness.dark,
+      //         surface: const Color.fromARGB(255, 42, 51, 59),
+      //
+      //     ),
+      //     scaffoldBackgroundColor: const Color.fromARGB(255, 50, 58, 60)
+      // ),
       home: Scaffold(
         // appBar: AppBar(
         //   title: const Center(child: Text("Theme tests"),),

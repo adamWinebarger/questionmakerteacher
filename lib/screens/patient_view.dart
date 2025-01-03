@@ -55,7 +55,7 @@ class _PatientViewState extends State<PatientView> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Center(
+            Center(
               child: Text(
                 "What would you like to do?",
                 style: TextStyle(
@@ -88,7 +88,13 @@ class _PatientViewState extends State<PatientView> {
                   side: BorderSide(width: 1, color: Theme.of(context).colorScheme.primary),
                   minimumSize: const Size(250, 40)
                 ),
-                child: Text("Rate ${widget.currentPatient.firstName}")
+                child: Text(
+                  "Rate ${widget.currentPatient.firstName}",
+                    style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: Colors.black
+                    )
+                )
               ),
             const SizedBox(height: 15,),
             //This will be our data viz for answered questionnaires
@@ -108,9 +114,15 @@ class _PatientViewState extends State<PatientView> {
                   side: BorderSide(width: 1, color: Theme.of(context).colorScheme.primary),
                   minimumSize: const Size(250, 40)
               ),
-              child: Text("${widget.currentPatient.firstName}'s Report Summary")
+              child: Text(
+                "${widget.currentPatient.firstName}'s Report Summary",
+                  style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: Colors.black
+                  )
+              )
             ),
-            const SizedBox(height: 15,),
+            SizedBox(height: 15),
             //View Questionnaires button
             ElevatedButton(
               onPressed: () {
@@ -126,7 +138,14 @@ class _PatientViewState extends State<PatientView> {
                 side: BorderSide(width: 1, color: Theme.of(context).colorScheme.primary),
                 minimumSize: const Size(250, 40)
               ),
-              child: const Text("View Past Reports"),
+              child: Text(
+                  "View Past Reports",
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black
+                ),
+
+              ),
             ),
             const SizedBox(height: 15,),
             ElevatedButton(
@@ -137,7 +156,13 @@ class _PatientViewState extends State<PatientView> {
                   side: BorderSide(width: 1, color: Theme.of(context).colorScheme.primary),
                   minimumSize: const Size(250, 40)
               ),
-              child: const Text("Go Back")
+              child: const Text(
+                  "Go Back",
+                  style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: Colors.black
+                  )
+              )
             ),
             const SizedBox(height: 45,),
             //This will be our thing for parents that allows them to toggle whether teachers
@@ -149,7 +174,8 @@ class _PatientViewState extends State<PatientView> {
                   label: const Text(
                     "Would you like teachers to be able to view parent reports?",
                     style: TextStyle(
-                      fontSize: 14
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold
                     ),
                   ),
                   contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),

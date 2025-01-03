@@ -109,8 +109,27 @@ class _PatientListScreenState extends State<PatientListScreen> {
 
   void _setupPushNotifs() async {
     final fcm = FirebaseMessaging.instance;
-    await fcm.requestPermission();
-    final token = await fcm.getToken();
+
+    // Request permission for notifications
+    NotificationSettings settings = await fcm.requestPermission(
+      alert: true,
+      announcement: false,
+      badge: true,
+      carPlay: false,
+      criticalAlert: false,
+      provisional: false,
+      sound: true,
+    );
+
+    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+      // Permissions granted, get token
+      final token = await fcm.getToken();
+      print("FCM Token: $token"); // For debugging; remove in production
+    } else if (settings.authorizationStatus == AuthorizationStatus.provisional) {
+      print("Provisional permission granted.");
+    } else {
+      print("Permission denied.");
+    }
   }
 
   @override
