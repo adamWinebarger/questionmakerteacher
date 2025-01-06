@@ -42,7 +42,12 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
       for (final category in answerSelection.entries) {
         widgetList.add(
             ListTile(
-              title: Text(category.key),
+              title: Text(
+                category.key,
+                style: TextStyle(
+                  color: Colors.white
+                ),
+              ),
               leading: Radio<Answers> (
                 value: category.value,
                 groupValue: _selectedAnswer,
@@ -51,6 +56,8 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                     _selectedAnswer = value;
                   });
                 },
+                focusColor: Colors.black,
+                overlayColor: WidgetStateProperty.all<Color>(Colors.grey.shade400),
               ),
             )
         );
@@ -172,7 +179,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                     (_count > -1) ?
                       _questions[_count] :
                         "Select the time of day that this questionnaire reflects:",
-                    style: const TextStyle(fontSize: 18),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
@@ -202,15 +209,23 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
                   label: Text(
                       "Select the time of day that this questionnaire is for:",
                     style: TextStyle(
-                      fontSize: 12
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white
                     ),
-                  )
+                  ),
                 ),
                 items: [
                   for (final selection in TimeOfInteraction.values)
                     DropdownMenuItem(
                         value: selection,
-                        child: Text(selection.name.capitalize())
+                        child: Text(
+                          selection.name.capitalize(),
+                          style: TextStyle(
+                            color: Colors.black,
+                            //backgroundColor: Colors.white
+                          ),
+                        )
                     )
                 ] ,
                 onChanged: (value) {

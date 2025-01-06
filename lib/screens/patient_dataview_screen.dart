@@ -255,7 +255,7 @@ class _PatientDataViewState extends State<PatientDataView> {
                   position: LegendPosition.right,
                   overflowMode: LegendItemOverflowMode.wrap,
                 ),
-                palette: <Color>[Colors.deepOrange.shade600, Colors.yellow.shade600, Colors.green, Colors.lightBlueAccent],
+                palette: <Color>[Colors.deepOrange.shade600, Colors.yellow.shade600, Colors.lightGreenAccent, Colors.lightBlueAccent],
                 series: <CircularSeries>[
                   PieSeries<AnswerValues, String>(
                       dataSource: _answerDataList[_currentQuestionNumber].answers,
@@ -311,12 +311,30 @@ class _PatientDataViewState extends State<PatientDataView> {
             children: [
               DropdownButtonFormField(
                 decoration: const InputDecoration(
-                  label: Text("Select Time of Day"),
+                  label: Text("Select Time of Day",
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white
+                    ),
+                  ),
+
                 ),
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      //color: Colors.white
+                  ),
                 items: _TimeOfDay.values.map((item) {
                   return DropdownMenuItem(
                       value: item,
-                      child: Text(item.name.capitalize())
+                      child: Text(
+                          item.name.capitalize(),
+                        style: TextStyle(
+                          color: Colors.black,
+                          //backgroundColor: Colors.white
+                        ),
+                      ),
                   );
                 }).toList(),
                 onChanged: (value) {
@@ -330,12 +348,25 @@ class _PatientDataViewState extends State<PatientDataView> {
               if (widget.parentOrTeacher == ParentOrTeacher.parent || widget.teacherCanViewParentReports)
                 DropdownButtonFormField(
                   decoration: const InputDecoration(
-                    label: Text("Select Parent of Teacher")
+                    label: Text("Select Parent of Teacher",
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white
+                      ),)
                   ),
+
                   items: ["Parent", "Teacher", "All"].map((String item) {
                     return DropdownMenuItem(
-                      child: Text(item),
                       value: item,
+                      child: Text(
+                        item,
+                        style: TextStyle(
+                          color: Colors.black,
+                          //backgroundColor: Colors.white
+                        ),
+                      ),
+
                     );
                   }).toList(),
                   onChanged: (item) {
@@ -346,7 +377,12 @@ class _PatientDataViewState extends State<PatientDataView> {
               const SizedBox(height: 10,),
               DropdownButtonFormField(
                 decoration: const InputDecoration(
-                  label: Text("Select Date Range")
+                  label: Text("Select Date Range",
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white
+                    ),)
                 ),
                 items: _dateRangeMap.entries.map((entry) {
                   return DropdownMenuItem(

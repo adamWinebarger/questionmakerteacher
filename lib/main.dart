@@ -23,11 +23,40 @@ class App extends StatelessWidget {
     return MaterialApp(
       title: 'Dr. Al\'s SHIFT',
       theme: ThemeData.light().copyWith(
-        useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
           seedColor: Color(0xff66BB6A),
           brightness: Brightness.light,
           surface: Color(0xff66BB6A),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ButtonStyle(
+            textStyle: WidgetStateProperty.resolveWith<TextStyle>(
+                (states) {
+                  return TextStyle(
+                    fontWeight: FontWeight.w900,
+                    color: Colors.black,
+                    fontSize: 14
+                  );
+                }
+            ),
+            backgroundColor: WidgetStatePropertyAll<Color>(
+                Colors.white
+            )
+          )
+        ),
+        radioTheme: RadioThemeData(
+          fillColor: WidgetStateProperty.all(Colors.white)
+        ),
+        textTheme: TextTheme(
+          titleMedium: TextStyle(
+            //backgroundColor: Colors.black,
+            //backgroundColor: Color(0xff388e3c)
+            color: Colors.black
+           // color: Colors.black
+          ),
+          bodyMedium: TextStyle(
+            color: Colors.black
+          )
         ),
         scaffoldBackgroundColor: Color(0xff388e3c)//const Color(0xff8f8f8f),
       ),

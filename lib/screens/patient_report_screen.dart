@@ -57,8 +57,9 @@ class PatientReportScreen extends StatelessWidget {
               Expanded(child:
                 Container(
                   decoration: BoxDecoration(
-                      border: Border.all(color: Colors.blueGrey, width: 2),
-                      borderRadius: BorderRadius.circular(10)
+                    border: Border.all(color: Colors.blueGrey, width: 2),
+                    borderRadius: BorderRadius.circular(10),
+                    color: Colors.white60
                   ),
                   child: ListView.builder(
                     itemCount: currentReport.answers.length,

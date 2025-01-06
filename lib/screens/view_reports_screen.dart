@@ -134,7 +134,8 @@ class _PatientReportsListScreenState extends State<PatientReportsListScreen> {
                   child: Container(
                     decoration: BoxDecoration(
                       border: Border.all(color: Colors.blueGrey, width: 2),
-                      borderRadius: BorderRadius.circular(10)
+                      borderRadius: BorderRadius.circular(10),
+                      color: Colors.white60
                     ),
                     child: ListView.builder(
                         itemCount: _reportsList.length,

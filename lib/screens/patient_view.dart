@@ -89,11 +89,7 @@ class _PatientViewState extends State<PatientView> {
                   minimumSize: const Size(250, 40)
                 ),
                 child: Text(
-                  "Rate ${widget.currentPatient.firstName}",
-                    style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        color: Colors.black
-                    )
+                  "Rate ${widget.currentPatient.firstName}"
                 )
               ),
             const SizedBox(height: 15,),
@@ -115,11 +111,7 @@ class _PatientViewState extends State<PatientView> {
                   minimumSize: const Size(250, 40)
               ),
               child: Text(
-                "${widget.currentPatient.firstName}'s Report Summary",
-                  style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: Colors.black
-                  )
+                "${widget.currentPatient.firstName}'s Report Summary"
               )
             ),
             SizedBox(height: 15),
@@ -140,11 +132,6 @@ class _PatientViewState extends State<PatientView> {
               ),
               child: Text(
                   "View Past Reports",
-                style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  color: Colors.black
-                ),
-
               ),
             ),
             const SizedBox(height: 15,),
@@ -158,10 +145,6 @@ class _PatientViewState extends State<PatientView> {
               ),
               child: const Text(
                   "Go Back",
-                  style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: Colors.black
-                  )
               )
             ),
             const SizedBox(height: 45,),

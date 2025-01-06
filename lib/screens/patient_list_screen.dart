@@ -196,16 +196,18 @@ class _PatientListScreenState extends State<PatientListScreen> {
                       itemCount: snapshot.data!.docs.length,
                       itemBuilder: (context, index) {
                         return Container(
-                          decoration: const BoxDecoration(
+                          decoration: BoxDecoration(
                             border: Border(
-                              bottom: BorderSide( color: Colors.blueGrey, width: 1)
+                              bottom: BorderSide( color: Colors.blueGrey.shade200, width: 1)
                             )
                           ),
                           child: ListTile(
                             title: Text(
                               snapshot.data!.docs[index].id,
-                              style: const TextStyle(
-                                  overflow: TextOverflow.ellipsis),
+                              style: TextStyle(
+                                overflow: TextOverflow.ellipsis,
+                                color: Colors.grey.shade100
+                              ),
                             ),
                             onTap: () {
                               //print(snapshot.data!.docs[index].data());

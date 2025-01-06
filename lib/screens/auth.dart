@@ -162,6 +162,9 @@ class _AuthScreenState extends State<AuthScreen> {
                           if (!_isLogin)
                             TextFormField(
                               decoration: const InputDecoration(labelText: "First Name:"),
+                              style: TextStyle(
+                                  color: Colors.black
+                              ),
                               validator: (value) {
                                 if (value == null || value.trim().length < 2) {
                                   return "Invalid first name detected.";
@@ -176,6 +179,9 @@ class _AuthScreenState extends State<AuthScreen> {
                           if (!_isLogin)
                             TextFormField(
                               decoration: const InputDecoration(labelText: "Last Name:"),
+                              style: TextStyle(
+                                  color: Colors.black
+                              ),
                               validator: (value) {
                                 if (value == null || value.trim().length < 4) {
                                   return "Invalid last name detected.";
@@ -189,6 +195,9 @@ class _AuthScreenState extends State<AuthScreen> {
                           //This will be for the email input
                           TextFormField(
                             decoration: const InputDecoration(labelText: "Email"),
+                            style: TextStyle(
+                              color: Colors.black
+                            ),
                             keyboardType: TextInputType.emailAddress,
                             autocorrect: false,
                             textCapitalization: TextCapitalization.none,
@@ -215,6 +224,9 @@ class _AuthScreenState extends State<AuthScreen> {
                                 //if (_isLogin)
                                 TextFormField(
                                   decoration: const InputDecoration(labelText: "Password"),
+                                  style: TextStyle(
+                                      color: Colors.black
+                                  ),
                                   autocorrect: false,
                                   obscureText: true,
                                   validator: (value) {
@@ -243,7 +255,7 @@ class _AuthScreenState extends State<AuthScreen> {
                                     lowercaseCharCount: 2,
                                     numericCharCount: 2,
                                     specialCharCount: 2,
-                                    defaultColor: Theme.of(context).colorScheme.primary,
+                                    defaultColor: Colors.black,
                                     successColor: Colors.lightGreen,
                                     failureColor: Colors.red,
                                     controller: _passwordController,
